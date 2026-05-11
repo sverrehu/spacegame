@@ -60,6 +60,16 @@ One player must start a server for everybody to connect to.
 The program may be started as a server, a client, or both.
 Run `spacegame -h` to see how.
 
+## Building
+
+In order to build the source code, you will need to set an environment variable that is required when building with gogpu:
+
+```shell
+CGO_ENABLED=0 go build .
+```
+
+If this variable is not set, you will get a cryptic error message: `undefined: GOFFI_REQUIRES_CGO_ENABLED_0`
+
 ## TODO
 
 * Adjust speed of ship, phaser and bombs to be playable.
