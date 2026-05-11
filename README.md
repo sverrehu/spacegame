@@ -7,9 +7,9 @@ This is a reimplementation in Go, using the fantastic [github.com/gogpu](https:/
 
 This is a simple game for multiple players.
 It reminds a bit about the good, old Asteroids arcade game, but there are no asteroids here.
-Instead, there are other space ships, controlled by other players.
+Instead, there are other spaceships, controlled by other players.
 This game is useless for you if you either a) don't have any friends, or b) don't have access to a computer network.
-You may be able to find additional reasons for it's uselessness.
+You may be able to find additional reasons for its uselessness.
 
 In your window, you see only a part of the world.
 Your ship stays centered in the view all the time.
@@ -38,7 +38,7 @@ If your ship is destroyed while you still have bombs left, the remaining bombs a
 When you die, and you certainly will if you play this game for a while, you may resurrect by pressing the R button.
 
 The upper right corner of the window shows the score table.
-The score is based on a ratio from the number of kills over the number of times a player has been killed (the two numbers are given in parenthesis).
+The score is based on a ratio from the number of kills over the number of times a player has been killed (the two numbers are given in parentheses).
 
 ## Steering Around
 
