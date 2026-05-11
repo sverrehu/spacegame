@@ -156,6 +156,9 @@ func (w *LiveWorld) GetClosestShip(except *LiveShip, pos *utils.Point) *LiveShip
 		if except != nil && ship.Id == except.Id {
 			continue
 		}
+		if !ship.IsAlive {
+			continue
+		}
 		distance := utils.LineLength(pos, &ship.Position)
 		if distance < shortestDistance {
 			shortestDistance = distance

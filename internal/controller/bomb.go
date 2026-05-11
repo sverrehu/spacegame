@@ -103,7 +103,7 @@ func updateBombDirection(bomb *model.LiveBomb, dt float64) {
 func updateBombLocation(bomb *model.LiveBomb, dt float64) {
 	oldPos := bomb.Position
 	bomb.Position.X += bomb.Dx
-	bomb.Position.Y += bomb.Dy
+	bomb.Position.Y -= bomb.Dy
 	victim := findCollidingShip(bomb.ShipId, &oldPos, &bomb.Position)
 	if victim != nil {
 		log.Println("hit by bomb")
