@@ -92,7 +92,7 @@ func updateBombDirection(bomb *model.LiveBomb, dt float64) {
 	}
 	bomb.Direction = dir
 	bomb.Dx += bombDeltaSpeed * dt * math.Cos(dir)
-	bomb.Dy -= bombDeltaSpeed * dt * math.Sin(dir)
+	bomb.Dy += bombDeltaSpeed * dt * math.Sin(dir)
 	speed := utils.VectorLengthXY(bomb.Dx, bomb.Dy)
 	if speed > bombMaxSpeed {
 		bomb.Dx *= bombMaxSpeed / speed
