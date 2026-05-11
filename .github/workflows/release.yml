@@ -23,6 +23,9 @@ jobs:
           PACKAGE="$(echo "${{ github.repository }}" | sed -e 's/.*\///')"
           mkdir builds
           env CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -trimpath -ldflags="-s -w" -o builds/"${PACKAGE}-${VERSION}"-linux-amd64
+          env CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -a -trimpath -ldflags="-s -w" -o builds/"${PACKAGE}-${VERSION}"-macos-amd64
+          env CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go build -a -trimpath -ldflags="-s -w" -o builds/"${PACKAGE}-${VERSION}"-macos-arm64
+          env CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -a -trimpath -ldflags="-s -w" -o builds/"${PACKAGE}-${VERSION}"-windows-amd64.exe
 
       - name: Push GitHub release artifact
         uses: softprops/action-gh-release@b4309332981a82ec1c5618f44dd2e27cc8bfbfda # v3.0.0
