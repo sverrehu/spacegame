@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.0.2](https://github.com/sverrehu/spacegame/compare/v0.0.1...v0.0.2) (2026-05-11)
+
+
+### Bug Fixes
+
+* make speeds more like the original game ([a0fb260](https://github.com/sverrehu/spacegame/commit/a0fb2603dda5af45f8aed3863b0c7efd4c0408fd))
+
 ## 0.0.1 (2026-05-11)
 
 
