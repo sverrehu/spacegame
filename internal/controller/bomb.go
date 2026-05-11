@@ -11,8 +11,8 @@ import (
 )
 
 const bombRotationSpeed = 7.87 // radians per second
-const bombDeltaSpeed = 100
-const bombMaxSpeed = 250    // pixels per second
+const bombDeltaSpeed = 60
+const bombMaxSpeed = 150    // pixels per second
 const bombMaxDistance = 750 // pixels
 const bombShipOffset = 13
 const bombFlipSpeed = 7 // flips per second

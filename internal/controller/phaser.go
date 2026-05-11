@@ -9,7 +9,7 @@ import (
 	"github.com/sverrehu/spacegame/internal/utils"
 )
 
-const phaserSpeed = 370.0     // pixels per second
+const phaserSpeed = 225.0     // pixels per second
 const phaserMaxDistance = 700 // pixels
 const phaserShipOffset = 13
 

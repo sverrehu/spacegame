@@ -8,9 +8,9 @@ import (
 	"github.com/sverrehu/spacegame/internal/utils"
 )
 
-const shipRotationSpeed = 2.95           // radians per second
-const shipMaxSpeed = 200                 // pixels per second
-const shipDeltaSpeed = 200.0             // speed increase per second
+const shipRotationSpeed = 2.0            // radians per second
+const shipMaxSpeed = 120                 // pixels per second
+const shipDeltaSpeed = 22.5              // speed increase per second
 const shipPhaserHeatReductionSpeed = 2.5 // phaser heat decrease per second
 const shipDamageReductionSpeed = 0.07    // damage decrease per second
 const shipInitialBombsLeft = 5
@@ -99,8 +99,8 @@ func updateShipAcceleration(ship *model.LiveShip, dt float64) {
 	}
 	dir := ship.Direction
 	thrustFactor := model.ThrustToFactor(ship.Thrust)
-	ship.DriftX += shipDeltaSpeed * thrustFactor * dt * math.Cos(dir)
-	ship.DriftY -= shipDeltaSpeed * thrustFactor * dt * math.Sin(dir)
+	ship.DriftX += shipDeltaSpeed * thrustFactor * math.Cos(dir)
+	ship.DriftY += shipDeltaSpeed * thrustFactor * math.Sin(dir)
 	speed := utils.VectorLengthXY(ship.DriftX, ship.DriftY)
 	if speed > shipMaxSpeed {
 		ship.DriftX *= shipMaxSpeed / speed
@@ -124,7 +124,7 @@ func updateShipLocation(ship *model.LiveShip, dt float64) {
 		}
 	}
 	ship.Position.X += ship.DriftX * dt
-	ship.Position.Y += ship.DriftY * dt
+	ship.Position.Y -= ship.DriftY * dt
 	if ship.Position.X < 0.0 {
 		ship.Position.X = 0.0
 	} else if ship.Position.X >= liveWorld.Width {

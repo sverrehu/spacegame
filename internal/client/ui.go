@@ -32,7 +32,7 @@ var lastPhaser = false
 var lastBomb = false
 var helpWanted = false
 
-const width, height = 1600, 900
+const width, height = 1500, 850
 
 func startUI() {
 	waitForWorldReady()
@@ -299,8 +299,8 @@ func drawMessages(cc *gg.Context, messages *GameMessages, r, g, b float64, start
 func drawRadar(cc *gg.Context) {
 	radarWidth := width / 7.0
 	radarHeight := (radarWidth * world.Height) / world.Width
-	radarX := width - radarWidth - 3
-	radarY := height - radarHeight - 3
+	radarX := width - radarWidth - 10
+	radarY := height - radarHeight - 10
 	cc.SetRGB(0, 0, 0)
 	cc.DrawRectangle(radarX, radarY, radarWidth, radarHeight)
 	_ = cc.Fill()
