@@ -3,6 +3,8 @@
 Originally written in Java back in 1997/1998.
 This is a reimplementation in Go, using the fantastic [github.com/gogpu](https://github.com/gogpu/) library to have platform-independent graphics without bundling any libraries.
 
+![Screenshot from playing Space Game](docs/img/SpaceGame.png)
+
 This is a simple game for multiple players.
 It reminds a bit about the good, old Asteroids arcade game, but there are no asteroids here.
 Instead, there are other space ships, controlled by other players.
