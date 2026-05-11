@@ -20,9 +20,11 @@ var smallExplosion []byte
 var phaserHitFile string
 var bigExplosionFile string
 var smallExplosionFile string
+var soundsEnabled bool
 
 func initSounds() {
 	sound.SetEnabled(true)
+	soundsEnabled = true
 	phaserHitFile = saveTemp(phaserHit)
 	bigExplosionFile = saveTemp(bigExplosion)
 	smallExplosionFile = saveTemp(smallExplosion)
@@ -47,9 +49,13 @@ func playSmallExplosion() {
 }
 
 func playFile(filename string) {
+	if !soundsEnabled {
+		return
+	}
 	err := sound.PlayFile(filename)
 	if err != nil {
 		log.Printf("Error playing sound file: %v", err)
+		soundsEnabled = false
 	}
 }
 
