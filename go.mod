@@ -3,7 +3,7 @@ module github.com/sverrehu/spacegame
 go 1.26.1
 
 require (
-	github.com/gogpu/gg v0.46.4
+	github.com/gogpu/gg v0.46.6
 	github.com/gogpu/gogpu v0.34.0
 	github.com/gogpu/gpucontext v0.18.0
 	github.com/sverrehu/goutils v1.0.3
@@ -15,7 +15,7 @@ require (
 	github.com/go-webgpu/webgpu v0.4.3 // indirect
 	github.com/gogpu/gputypes v0.5.0 // indirect
 	github.com/gogpu/naga v0.17.13 // indirect
-	github.com/gogpu/wgpu v0.27.1 // indirect
+	github.com/gogpu/wgpu v0.27.2 // indirect
 	golang.org/x/image v0.40.0 // indirect
 	golang.org/x/sys v0.44.0 // indirect
 	golang.org/x/text v0.37.0 // indirect
