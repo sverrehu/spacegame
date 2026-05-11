@@ -3,6 +3,7 @@ module github.com/sverrehu/spacegame
 go 1.26.1
 
 require (
+	// gogpu/gg v0.45.4 and onwards break on Retina displays. do not upgrade without testing.
 	github.com/gogpu/gg v0.45.3
 	github.com/gogpu/gogpu v0.34.3
 	github.com/gogpu/gpucontext v0.18.0
