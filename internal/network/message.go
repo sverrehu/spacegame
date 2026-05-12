@@ -100,11 +100,6 @@ type FireBombMessage struct {
 	BaseMessage
 }
 
-type NewBombMessage struct {
-	BaseMessage
-	Bomb model.Bomb
-}
-
 func (m BaseMessage) GetType() MessageType {
 	return m.Type
 }

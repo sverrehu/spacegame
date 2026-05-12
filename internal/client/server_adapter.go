@@ -100,10 +100,6 @@ func (a *ServerAdapter) Resurrect() {
 	a.handleError(a.Send(m))
 }
 
-func (a *ServerAdapter) HandleNewBombMessage(msg network.NewBombMessage) {
-	world.Bombs[msg.Bomb.Id] = &msg.Bomb
-}
-
 func (a *ServerAdapter) HandleNewInGameMessageMessage(msg network.InGameMessageMessage) {
 	switch msg.Type {
 	case network.InGameInfoMessage:
