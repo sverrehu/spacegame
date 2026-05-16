@@ -31,11 +31,12 @@ var lastTurn = model.TurnNone
 var lastPhaser = false
 var lastBomb = false
 var helpWanted = false
+var client ClientInterface
 
 const width, height = 1500, 850
 
-func startUI() {
-	waitForWorldReady()
+func startUI(ci ClientInterface) {
+	client = ci
 	initSounds()
 	defer func() { teardownSounds() }()
 	app := gogpu.NewApp(gogpu.DefaultConfig().
@@ -116,26 +117,26 @@ func startUI() {
 func onKeyPress() func(key gpucontext.Key, mods gpucontext.Modifiers) {
 	return func(key gpucontext.Key, mods gpucontext.Modifiers) {
 		if key == gpucontext.KeyLeft {
-			server.SetTurn(model.TurnLeft)
+			client.TurnLeft()
 			lastTurn = model.TurnLeft
 		} else if key == gpucontext.KeyRight {
-			server.SetTurn(model.TurnRight)
+			client.TurnRight()
 			lastTurn = model.TurnRight
 		} else if key == gpucontext.KeyUp {
-			server.SetThrust(model.ThrustForward)
+			client.ThrustForward()
 			lastThrust = model.ThrustForward
 		} else if key == gpucontext.KeyDown {
-			server.SetThrust(model.ThrustBack)
+			client.ThrustBack()
 			lastThrust = model.ThrustBack
 		} else if !lastPhaser && (key == gpucontext.KeySpace || key == gpucontext.KeyLeftControl || key == gpucontext.KeyRightControl) {
-			server.FirePhaser()
+			client.FirePhaser()
 			lastPhaser = true
 		} else if !lastBomb && (key == gpucontext.KeyLeftAlt || key == gpucontext.KeyRightAlt || key == gpucontext.KeyLeftShift || key == gpucontext.KeyRightShift) {
-			server.FireBomb()
+			client.FireBomb()
 			lastBomb = true
 		} else if key == gpucontext.KeyR {
-			if !myShip().IsAlive {
-				server.Resurrect()
+			if !client.GetMyShip().IsAlive {
+				client.Resurrect()
 			}
 		} else if key == gpucontext.KeyF1 {
 			helpWanted = true
@@ -146,16 +147,16 @@ func onKeyPress() func(key gpucontext.Key, mods gpucontext.Modifiers) {
 func onKeyRelease() func(key gpucontext.Key, mods gpucontext.Modifiers) {
 	return func(key gpucontext.Key, mods gpucontext.Modifiers) {
 		if key == gpucontext.KeyLeft && lastTurn == model.TurnLeft {
-			server.SetTurn(model.TurnNone)
+			client.TurnNone()
 			lastTurn = model.TurnNone
 		} else if key == gpucontext.KeyRight && lastTurn == model.TurnRight {
-			server.SetTurn(model.TurnNone)
+			client.TurnNone()
 			lastTurn = model.TurnNone
 		} else if key == gpucontext.KeyUp && lastThrust == model.ThrustForward {
-			server.SetThrust(model.ThrustNone)
+			client.ThrustNone()
 			lastThrust = model.ThrustNone
 		} else if key == gpucontext.KeyDown && lastThrust == model.ThrustBack {
-			server.SetThrust(model.ThrustNone)
+			client.ThrustNone()
 			lastThrust = model.ThrustNone
 		} else if key == gpucontext.KeySpace || key == gpucontext.KeyLeftControl || key == gpucontext.KeyRightControl {
 			lastPhaser = false
@@ -168,112 +169,114 @@ func onKeyRelease() func(key gpucontext.Key, mods gpucontext.Modifiers) {
 }
 
 func renderFrame(cc *gg.Context) {
+	world := client.GetWorld()
+	myShip := client.GetMyShip()
 	cc.ClearWithColor(gg.RGBA2(0, 0, 0, 1))
 	// world relative objects
-	drawBounds(cc)
+	drawBounds(cc, world, myShip)
 	for _, star := range world.Stars {
-		drawStar(cc, star)
+		drawStar(cc, star, myShip)
 	}
 	for _, ship := range world.Ships {
-		drawShip(cc, ship)
+		drawShip(cc, ship, myShip)
 	}
 	for _, phaser := range world.Phasers {
-		drawPhaser(cc, phaser)
+		drawPhaser(cc, phaser, myShip)
 	}
 	for _, bomb := range world.Bombs {
-		drawBomb(cc, bomb)
+		drawBomb(cc, bomb, myShip)
 	}
 	for _, bombPack := range world.BombPacks {
-		drawBombPack(cc, bombPack)
+		drawBombPack(cc, bombPack, myShip)
 	}
 	for _, explosion := range world.Explosions {
-		drawExplosion(cc, explosion)
+		drawExplosion(cc, explosion, myShip)
 	}
 	// screen relative objects
-	drawRadar(cc)
-	drawStatus(cc)
-	drawScores(cc)
+	drawRadar(cc, world, myShip)
+	drawStatus(cc, myShip)
+	drawScores(cc, world)
 	drawAllMessages(cc)
-	drawResurrectMessage(cc)
+	drawResurrectMessage(cc, myShip)
 	drawHelp(cc)
 }
 
-func drawBounds(cc *gg.Context) {
+func drawBounds(cc *gg.Context, world *model.World, myShip *model.Ship) {
 	cc.SetRGB(0.5, 0.5, 0.5)
-	cc.MoveTo(rX(0), rY(0))
-	cc.LineTo(rX(world.Width-1), rY(0))
-	cc.LineTo(rX(world.Width-1), rY(world.Height-1))
-	cc.LineTo(rX(0), rY(world.Height-1))
-	cc.LineTo(rX(0), rY(0))
+	cc.MoveTo(rX(0, myShip), rY(0, myShip))
+	cc.LineTo(rX(world.Width-1, myShip), rY(0, myShip))
+	cc.LineTo(rX(world.Width-1, myShip), rY(world.Height-1, myShip))
+	cc.LineTo(rX(0, myShip), rY(world.Height-1, myShip))
+	cc.LineTo(rX(0, myShip), rY(0, myShip))
 	_ = cc.Stroke()
 }
 
-func drawStar(cc *gg.Context, star *model.Star) {
+func drawStar(cc *gg.Context, star *model.Star, myShip *model.Ship) {
 	cc.SetRGB(star.Color.R, star.Color.G, star.Color.B)
-	cc.DrawPoint(rX(star.Position.X), rY(star.Position.Y), 1.1)
+	cc.DrawPoint(rX(star.Position.X, myShip), rY(star.Position.Y, myShip), 1.1)
 	_ = cc.Fill()
 }
 
-func drawShip(cc *gg.Context, ship *model.Ship) {
+func drawShip(cc *gg.Context, ship *model.Ship, myShip *model.Ship) {
 	if !ship.IsAlive {
 		return
 	}
 	worldShape := ship.GetWorldRelativeShape()
 	cc.SetRGB(ship.Color.R, ship.Color.G, ship.Color.B)
-	cc.MoveTo(rX(worldShape[0].X), rY(worldShape[0].Y))
+	cc.MoveTo(rX(worldShape[0].X, myShip), rY(worldShape[0].Y, myShip))
 	for _, point := range worldShape[1:] {
-		cc.LineTo(rX(point.X), rY(point.Y))
+		cc.LineTo(rX(point.X, myShip), rY(point.Y, myShip))
 	}
 	cc.ClosePath()
 	_ = cc.Fill()
 	if len(ship.Name) > 0 {
 		cc.SetRGB(0.39, 0.39, 1)
 		cc.SetFont(playerNameFont)
-		cc.DrawStringAnchored(ship.Name, rX(ship.Position.X), rY(ship.Position.Y-17), 0.5, 1)
+		cc.DrawStringAnchored(ship.Name, rX(ship.Position.X, myShip), rY(ship.Position.Y-17, myShip), 0.5, 1)
 	}
 }
 
-func drawPhaser(cc *gg.Context, phaser *model.Phaser) {
+func drawPhaser(cc *gg.Context, phaser *model.Phaser, myShip *model.Ship) {
 	cc.SetRGB(phaser.Color.R, phaser.Color.G, phaser.Color.B)
-	cc.DrawPoint(rX(phaser.Position.X), rY(phaser.Position.Y), 1.3)
+	cc.DrawPoint(rX(phaser.Position.X, myShip), rY(phaser.Position.Y, myShip), 1.3)
 	_ = cc.Fill()
 }
 
-func drawBomb(cc *gg.Context, bomb *model.Bomb) {
+func drawBomb(cc *gg.Context, bomb *model.Bomb, myShip *model.Ship) {
 	cc.SetRGB(1, 1, 0)
 	diameter := 7.0
 	r := (diameter - 2.0) / 2.0
 	if bomb.Flip {
-		cc.DrawLine(rX(bomb.Position.X)-r-2, rY(bomb.Position.Y), rX(bomb.Position.X)+r+2, rY(bomb.Position.Y))
-		cc.DrawLine(rX(bomb.Position.X), rY(bomb.Position.Y)-r-2, rX(bomb.Position.X), rY(bomb.Position.Y)+r+2)
+		cc.DrawLine(rX(bomb.Position.X, myShip)-r-2, rY(bomb.Position.Y, myShip), rX(bomb.Position.X, myShip)+r+2, rY(bomb.Position.Y, myShip))
+		cc.DrawLine(rX(bomb.Position.X, myShip), rY(bomb.Position.Y, myShip)-r-2, rX(bomb.Position.X, myShip), rY(bomb.Position.Y, myShip)+r+2)
 	} else {
-		cc.DrawLine(rX(bomb.Position.X)-r-1, rY(bomb.Position.Y)-r-1, rX(bomb.Position.X)+r+1, rY(bomb.Position.Y)+r+1)
-		cc.DrawLine(rX(bomb.Position.X)-r-1, rY(bomb.Position.Y)+r+1, rX(bomb.Position.X)+r+1, rY(bomb.Position.Y)-r-1)
+		cc.DrawLine(rX(bomb.Position.X, myShip)-r-1, rY(bomb.Position.Y, myShip)-r-1, rX(bomb.Position.X, myShip)+r+1, rY(bomb.Position.Y, myShip)+r+1)
+		cc.DrawLine(rX(bomb.Position.X, myShip)-r-1, rY(bomb.Position.Y, myShip)+r+1, rX(bomb.Position.X, myShip)+r+1, rY(bomb.Position.Y, myShip)-r-1)
 	}
 	_ = cc.Stroke()
 	cc.SetRGB(bomb.Color.R, bomb.Color.G, bomb.Color.B)
-	cc.DrawCircle(rX(bomb.Position.X), rY(bomb.Position.Y), r)
+	cc.DrawCircle(rX(bomb.Position.X, myShip), rY(bomb.Position.Y, myShip), r)
 	_ = cc.Fill()
 }
 
-func drawBombPack(cc *gg.Context, bombPack *model.BombPack) {
+func drawBombPack(cc *gg.Context, bombPack *model.BombPack, myShip *model.Ship) {
 	diameter := 7.0
 	d2 := diameter - 2.0
 	r := d2 / 2.0
 	cc.SetRGB(bombPack.Color.R, bombPack.Color.G, bombPack.Color.B)
-	cc.DrawCircle(rX(bombPack.Position.X-d2), rY(bombPack.Position.Y-d2), r)
-	cc.DrawCircle(rX(bombPack.Position.X), rY(bombPack.Position.Y-d2), r)
-	cc.DrawCircle(rX(bombPack.Position.X-r), rY(bombPack.Position.Y), r)
+	cc.DrawCircle(rX(bombPack.Position.X-d2, myShip), rY(bombPack.Position.Y-d2, myShip), r)
+	cc.DrawCircle(rX(bombPack.Position.X, myShip), rY(bombPack.Position.Y-d2, myShip), r)
+	cc.DrawCircle(rX(bombPack.Position.X-r, myShip), rY(bombPack.Position.Y, myShip), r)
 	_ = cc.Fill()
 }
 
-func drawExplosion(cc *gg.Context, explosion *model.Explosion) {
+func drawExplosion(cc *gg.Context, explosion *model.Explosion, myShip *model.Ship) {
 	cc.SetRGB(0.8, 0.8, 1.0)
-	cc.DrawCircle(rX(explosion.Position.X), rY(explosion.Position.Y), explosion.OuterRadius)
+	cc.DrawCircle(rX(explosion.Position.X, myShip), rY(explosion.Position.Y, myShip), explosion.OuterRadius)
 	_ = cc.Fill()
 	if explosion.InnerRadius > 0 {
 		cc.SetRGB(0, 0, 0)
-		cc.DrawCircle(rX(explosion.Position.X), rY(explosion.Position.Y), explosion.InnerRadius)
+		cc.DrawCircle(rX(explosion.Position.X, myShip), rY(explosion.Position.Y, myShip), explosion.InnerRadius)
 		_ = cc.Fill()
 	}
 }
@@ -296,7 +299,7 @@ func drawMessages(cc *gg.Context, messages *GameMessages, r, g, b float64, start
 	_ = cc.Fill()
 }
 
-func drawRadar(cc *gg.Context) {
+func drawRadar(cc *gg.Context, world *model.World, myShip *model.Ship) {
 	radarWidth := width / 7.0
 	radarHeight := (radarWidth * world.Height) / world.Width
 	radarX := width - radarWidth - 10
@@ -311,8 +314,8 @@ func drawRadar(cc *gg.Context) {
 	cc.ClipRect(radarX, radarY, radarWidth, radarHeight)
 	/* show a frame indicating the area seen in the window */
 	cc.SetRGB(0.5, 0.5, 0.5)
-	cc.DrawRectangle(radarX+((myShip().Position.X-width/2)*radarWidth)/world.Width,
-		radarY+((myShip().Position.Y-height/2)*radarHeight)/world.Height,
+	cc.DrawRectangle(radarX+((myShip.Position.X-width/2)*radarWidth)/world.Width,
+		radarY+((myShip.Position.Y-height/2)*radarHeight)/world.Height,
 		(width*radarWidth)/world.Width,
 		(height*radarHeight)/world.Height)
 	_ = cc.Stroke()
@@ -338,7 +341,7 @@ func drawRadar(cc *gg.Context) {
 	_ = cc.Stroke()
 }
 
-func drawStatus(cc *gg.Context) {
+func drawStatus(cc *gg.Context, myShip *model.Ship) {
 	ascent := statusFont.Metrics().Ascent
 	lineHeight := ascent + messagesFont.Metrics().Descent
 	labelWidth := statusFont.Advance("Damage: ") // longest status indicator
@@ -349,11 +352,11 @@ func drawStatus(cc *gg.Context) {
 	cc.SetRGB(0, 1, 0)
 	cc.SetFont(scoresFont)
 	cc.DrawString("Bombs:", x, y)
-	cc.DrawString(fmt.Sprintf("%d", myShip().BombsLeft), x2, y)
+	cc.DrawString(fmt.Sprintf("%d", myShip.BombsLeft), x2, y)
 	cc.DrawString("Heat:", x, y+lineHeight)
-	heatPctWidth := meterWidth * math.Min(float64(myShip().PhaserHeat), 100) / 100.0
-	safeHeatPctWidth := meterWidth * math.Min(float64(myShip().PhaserHeat), 75) / 100.0
-	if myShip().PhaserHeat > 75 {
+	heatPctWidth := meterWidth * math.Min(float64(myShip.PhaserHeat), 100) / 100.0
+	safeHeatPctWidth := meterWidth * math.Min(float64(myShip.PhaserHeat), 75) / 100.0
+	if myShip.PhaserHeat > 75 {
 		cc.SetRGB(1, 0, 0)
 		cc.DrawRectangle(x2, y+lineHeight-ascent, heatPctWidth, ascent)
 		_ = cc.Fill()
@@ -364,7 +367,7 @@ func drawStatus(cc *gg.Context) {
 	cc.DrawRectangle(x2, y+lineHeight-ascent, meterWidth, ascent)
 	_ = cc.Stroke()
 	cc.DrawString("Damage:", x, y+2*lineHeight)
-	damagePctWidth := meterWidth * math.Min(float64(myShip().Damage), 100) / 100.0
+	damagePctWidth := meterWidth * math.Min(float64(myShip.Damage), 100) / 100.0
 	cc.SetRGB(1, 0, 0)
 	cc.DrawRectangle(x2, y+2*lineHeight-ascent, damagePctWidth, ascent)
 	_ = cc.Fill()
@@ -373,7 +376,7 @@ func drawStatus(cc *gg.Context) {
 	_ = cc.Stroke()
 }
 
-func drawScores(cc *gg.Context) {
+func drawScores(cc *gg.Context, world *model.World) {
 	scores := toScores(slices.Collect(maps.Values(world.Ships)))
 	lines := make([]string, 0, len(scores))
 	maxWidth := 0.0
@@ -397,8 +400,8 @@ func drawScores(cc *gg.Context) {
 	_ = cc.Fill()
 }
 
-func drawResurrectMessage(cc *gg.Context) {
-	if myShip().IsAlive {
+func drawResurrectMessage(cc *gg.Context, myShip *model.Ship) {
+	if myShip.IsAlive {
 		return
 	}
 	cc.SetRGB(1, 1, 1)
@@ -443,10 +446,10 @@ func drawHelp(cc *gg.Context) {
 	_ = cc.Stroke()
 }
 
-func rX(x float64) float64 {
-	return x - myShip().Position.X + width/2
+func rX(x float64, myShip *model.Ship) float64 {
+	return x - myShip.Position.X + width/2
 }
 
-func rY(y float64) float64 {
-	return y - myShip().Position.Y + height/2
+func rY(y float64, myShip *model.Ship) float64 {
+	return y - myShip.Position.Y + height/2
 }

@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"log"
 	"math"
 	"math/rand/v2"
 
@@ -46,7 +45,6 @@ func updatePhaser(phaser *model.LivePhaser, dt float64) { // dt - delta time (ti
 	phaser.BaseObject.Changed = true
 	victim := findCollidingShip(phaser.ShipId, &oldPos, &phaser.Position)
 	if victim != nil {
-		log.Println("hit")
 		phaser.Delete = true
 		registerHit(victim, model.WeaponPhaser, liveWorld.Ships[phaser.ShipId], 5+rand.Float64()*15.0)
 	}

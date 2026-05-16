@@ -42,7 +42,8 @@ func main() {
 			fmt.Println("You must specify a name")
 			os.Exit(1)
 		}
-		client.StartClient(host, port, name)
+		client := client.NewTcpClient(host, port, name)
+		client.Start()
 	}
 	if serverPort >= 0 {
 		server.WaitForServer()
