@@ -116,26 +116,26 @@ func startUI() {
 func onKeyPress() func(key gpucontext.Key, mods gpucontext.Modifiers) {
 	return func(key gpucontext.Key, mods gpucontext.Modifiers) {
 		if key == gpucontext.KeyLeft {
-			server.SetTurn(model.TurnLeft)
+			server.sendTurnMessage(model.TurnLeft)
 			lastTurn = model.TurnLeft
 		} else if key == gpucontext.KeyRight {
-			server.SetTurn(model.TurnRight)
+			server.sendTurnMessage(model.TurnRight)
 			lastTurn = model.TurnRight
 		} else if key == gpucontext.KeyUp {
-			server.SetThrust(model.ThrustForward)
+			server.sendThrustMessage(model.ThrustForward)
 			lastThrust = model.ThrustForward
 		} else if key == gpucontext.KeyDown {
-			server.SetThrust(model.ThrustBack)
+			server.sendThrustMessage(model.ThrustBack)
 			lastThrust = model.ThrustBack
 		} else if !lastPhaser && (key == gpucontext.KeySpace || key == gpucontext.KeyLeftControl || key == gpucontext.KeyRightControl) {
-			server.FirePhaser()
+			server.sendFirePhaserMessage()
 			lastPhaser = true
 		} else if !lastBomb && (key == gpucontext.KeyLeftAlt || key == gpucontext.KeyRightAlt || key == gpucontext.KeyLeftShift || key == gpucontext.KeyRightShift) {
-			server.FireBomb()
+			server.sendFireBombMessage()
 			lastBomb = true
 		} else if key == gpucontext.KeyR {
 			if !myShip().IsAlive {
-				server.Resurrect()
+				server.sendResurrectMessage()
 			}
 		} else if key == gpucontext.KeyF1 {
 			helpWanted = true
@@ -146,16 +146,16 @@ func onKeyPress() func(key gpucontext.Key, mods gpucontext.Modifiers) {
 func onKeyRelease() func(key gpucontext.Key, mods gpucontext.Modifiers) {
 	return func(key gpucontext.Key, mods gpucontext.Modifiers) {
 		if key == gpucontext.KeyLeft && lastTurn == model.TurnLeft {
-			server.SetTurn(model.TurnNone)
+			server.sendTurnMessage(model.TurnNone)
 			lastTurn = model.TurnNone
 		} else if key == gpucontext.KeyRight && lastTurn == model.TurnRight {
-			server.SetTurn(model.TurnNone)
+			server.sendTurnMessage(model.TurnNone)
 			lastTurn = model.TurnNone
 		} else if key == gpucontext.KeyUp && lastThrust == model.ThrustForward {
-			server.SetThrust(model.ThrustNone)
+			server.sendThrustMessage(model.ThrustNone)
 			lastThrust = model.ThrustNone
 		} else if key == gpucontext.KeyDown && lastThrust == model.ThrustBack {
-			server.SetThrust(model.ThrustNone)
+			server.sendThrustMessage(model.ThrustNone)
 			lastThrust = model.ThrustNone
 		} else if key == gpucontext.KeySpace || key == gpucontext.KeyLeftControl || key == gpucontext.KeyRightControl {
 			lastPhaser = false

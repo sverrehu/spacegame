@@ -7,17 +7,39 @@ import (
 	"sync"
 
 	"github.com/sverrehu/spacegame/internal/model"
+	"github.com/sverrehu/spacegame/internal/network"
 )
 
-var server ServerAdapter
-var world model.World
-var myShipId int32
-var worldReadyMutex sync.Mutex
-var worldReadyCond = sync.NewCond(&worldReadyMutex)
+type ClientInterface interface {
+	handleIncoming(msg *network.Message)
 
-func StartClient(host string, port int, name string) {
-	server = NewServerAdapter(connect(host, port))
-	server.Enter(name)
+	SetTurn(turn model.Turn)
+}
+
+type Client struct {
+	host            string
+	port            int
+	name            string
+	server          ServerAdapter
+	world           model.World
+	myShipId        int32
+	worldReadyMutex sync.Mutex
+	worldReadyCond  *sync.Cond
+}
+
+func NewTcpClient(host string, port int, name string) *Client {
+	client := &Client{
+		host: host,
+		port: port,
+		name: name,
+	}
+	client.worldReadyCond = sync.NewCond(&client.worldReadyMutex)
+	return client
+}
+
+func (c *Client) StartClient(host string, port int, name string) {
+	c.server = NewServerAdapter(connect(host, port))
+	c.server.sendEnterMessage(name)
 	startUI()
 }
 
