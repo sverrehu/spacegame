@@ -9,14 +9,21 @@ import (
 	"github.com/sverrehu/spacegame/internal/network"
 )
 
-type ServerAdapter struct {
-	Transceiver *network.TcpTransceiver
+type IncomingHandler interface {
+	welcome(id int32, width, height float64, u []model.AnyObjectUpdate)
+	handleUpdates(updates []model.AnyObjectUpdate)
 }
 
-func NewServerAdapter(conn net.Conn) ServerAdapter {
+type ServerAdapter struct {
+	Transceiver     *network.TcpTransceiver
+	incomingHandler IncomingHandler
+}
+
+func NewServerAdapter(conn net.Conn, handler IncomingHandler) ServerAdapter {
 	a := ServerAdapter{}
 	transceiver := network.NewTransceiver(conn, a.HandleIncomingMessage)
 	a.Transceiver = transceiver
+	a.incomingHandler = handler
 	return a
 }
 
@@ -48,11 +55,11 @@ func (a *ServerAdapter) HandleIncomingMessage(msg network.Message) error {
 
 func (a *ServerAdapter) handleWelcomeMessage(msg network.WelcomeMessage) {
 	log.Printf("Connected with id %d", msg.Id)
-	welcome(msg.Id, msg.Width, msg.Height, msg.Updates)
+	a.incomingHandler.welcome(msg.Id, msg.Width, msg.Height, msg.Updates)
 }
 
 func (a *ServerAdapter) handleUpdatesMessage(msg network.UpdatesMessage) {
-	handleUpdates(msg.Updates)
+	a.incomingHandler.handleUpdates(msg.Updates)
 }
 
 func (a *ServerAdapter) handleHitByMessage(msg network.HitByMessage) {

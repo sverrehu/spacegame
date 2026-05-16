@@ -7,13 +7,20 @@ import (
 	"sync"
 
 	"github.com/sverrehu/spacegame/internal/model"
-	"github.com/sverrehu/spacegame/internal/network"
 )
 
 type ClientInterface interface {
-	handleIncoming(msg *network.Message)
-
-	SetTurn(turn model.Turn)
+	GetWorld() *model.World
+	GetMyShip() *model.Ship
+	TurnLeft()
+	TurnRight()
+	TurnNone()
+	ThrustForward()
+	ThrustBack()
+	ThrustNone()
+	FirePhaser()
+	FireBomb()
+	Resurrect()
 }
 
 type Client struct {
@@ -37,13 +44,14 @@ func NewTcpClient(host string, port int, name string) *Client {
 	return client
 }
 
-func (c *Client) StartClient(host string, port int, name string) {
-	c.server = NewServerAdapter(connect(host, port))
-	c.server.sendEnterMessage(name)
-	startUI()
+func (c *Client) Start() {
+	c.server = NewServerAdapter(c.connect(c.host, c.port), c)
+	c.server.sendEnterMessage(c.name)
+	c.waitForWorldReady()
+	startUI(c)
 }
 
-func connect(host string, port int) net.Conn {
+func (c *Client) connect(host string, port int) net.Conn {
 	conn, err := net.Dial("tcp", host+":"+strconv.Itoa(port))
 	if err != nil {
 		log.Fatal("Error connecting:", err)
@@ -51,82 +59,78 @@ func connect(host string, port int) net.Conn {
 	return conn
 }
 
-func welcome(id int32, width, height float64, u []model.AnyObjectUpdate) {
-	myShipId = id
-	world = model.NewWorld(width, height)
-	handleUpdates(u)
-	worldReadyMutex.Lock()
-	defer worldReadyMutex.Unlock()
-	worldReadyCond.Broadcast()
+func (c *Client) welcome(id int32, width, height float64, u []model.AnyObjectUpdate) {
+	c.myShipId = id
+	c.world = model.NewWorld(width, height)
+	c.handleUpdates(u)
+	c.worldReadyMutex.Lock()
+	defer c.worldReadyMutex.Unlock()
+	c.worldReadyCond.Broadcast()
 }
 
-func myShip() *model.Ship {
-	return world.Ships[myShipId]
+func (c *Client) waitForWorldReady() {
+	c.worldReadyMutex.Lock()
+	defer c.worldReadyMutex.Unlock()
+	c.worldReadyCond.Wait()
 }
 
-func waitForWorldReady() {
-	worldReadyMutex.Lock()
-	defer worldReadyMutex.Unlock()
-	worldReadyCond.Wait()
-}
-
-func handleUpdates(updates []model.AnyObjectUpdate) {
+func (c *Client) handleUpdates(updates []model.AnyObjectUpdate) {
 	for _, u := range updates {
 		var obj model.GameObject = nil
 		switch u.Type {
 		case model.ObjectStar:
-			if world.Stars[u.Id] == nil {
-				world.Stars[u.Id] = &model.Star{}
+			if c.world.Stars[u.Id] == nil {
+				c.world.Stars[u.Id] = &model.Star{}
 			}
 			if u.Delete {
-				delete(world.Stars, u.Id)
+				delete(c.world.Stars, u.Id)
 			} else {
-				obj = world.Stars[u.Id]
+				obj = c.world.Stars[u.Id]
 			}
 		case model.ObjectShip:
-			if world.Ships[u.Id] == nil {
-				world.Ships[u.Id] = &model.Ship{}
+			if c.world.Ships[u.Id] == nil {
+				c.world.Ships[u.Id] = &model.Ship{}
 			}
 			if u.Delete {
-				delete(world.Ships, u.Id)
+				delete(c.world.Ships, u.Id)
 			} else {
-				obj = world.Ships[u.Id]
+				obj = c.world.Ships[u.Id]
 			}
 		case model.ObjectPhaser:
-			if world.Phasers[u.Id] == nil {
-				world.Phasers[u.Id] = &model.Phaser{}
+			if c.world.Phasers[u.Id] == nil {
+				c.world.Phasers[u.Id] = &model.Phaser{}
 			}
 			if u.Delete {
-				delete(world.Phasers, u.Id)
+				delete(c.world.Phasers, u.Id)
 			} else {
-				obj = world.Phasers[u.Id]
+				obj = c.world.Phasers[u.Id]
 			}
 		case model.ObjectBomb:
-			if world.Bombs[u.Id] == nil {
-				world.Bombs[u.Id] = &model.Bomb{}
+			if c.world.Bombs[u.Id] == nil {
+				c.world.Bombs[u.Id] = &model.Bomb{}
 			}
 			if u.Delete {
-				delete(world.Bombs, u.Id)
+				delete(c.world.Bombs, u.Id)
 			} else {
-				obj = world.Bombs[u.Id]
+				obj = c.world.Bombs[u.Id]
 			}
 		case model.ObjectBombPack:
-			if world.BombPacks[u.Id] == nil {
-				world.BombPacks[u.Id] = &model.BombPack{}
+			if c.world.BombPacks[u.Id] == nil {
+				c.world.BombPacks[u.Id] = &model.BombPack{}
 			}
 			if u.Delete {
-				delete(world.BombPacks, u.Id)
+				delete(c.world.BombPacks, u.Id)
 			} else {
-				obj = world.BombPacks[u.Id]
+				obj = c.world.BombPacks[u.Id]
 			}
 		case model.ObjectExplosion:
-			if world.Explosions[u.Id] == nil {
-				world.Explosions[u.Id] = &model.Explosion{}
+			if c.world.Explosions[u.Id] == nil {
+				c.world.Explosions[u.Id] = &model.Explosion{}
 			}
 			if u.Delete {
-				delete(world.Explosions, u.Id)
+				delete(c.world.Explosions, u.Id)
 			} else {
-				obj = world.Explosions[u.Id]
+				obj = c.world.Explosions[u.Id]
 			}
 		default:
 			log.Printf("Unknown update type %d", u.Type)
@@ -135,4 +139,48 @@ func handleUpdates(updates []model.AnyObjectUpdate) {
 			obj.FromAnyUpdate(u)
 		}
 	}
+}
+
+func (c *Client) GetWorld() *model.World {
+	return &c.world
+}
+
+func (c *Client) GetMyShip() *model.Ship {
+	return c.world.Ships[c.myShipId]
+}
+
+func (c *Client) TurnLeft() {
+	c.server.sendTurnMessage(model.TurnLeft)
+}
+
+func (c *Client) TurnRight() {
+	c.server.sendTurnMessage(model.TurnRight)
+}
+
+func (c *Client) TurnNone() {
+	c.server.sendTurnMessage(model.TurnNone)
+}
+
+func (c *Client) ThrustForward() {
+	c.server.sendThrustMessage(model.ThrustForward)
+}
+
+func (c *Client) ThrustBack() {
+	c.server.sendThrustMessage(model.ThrustBack)
+}
+
+func (c *Client) ThrustNone() {
+	c.server.sendThrustMessage(model.ThrustNone)
+}
+
+func (c *Client) FirePhaser() {
+	c.server.sendFirePhaserMessage()
+}
+
+func (c *Client) FireBomb() {
+	c.server.sendFireBombMessage()
+}
+
+func (c *Client) Resurrect() {
+	c.server.sendResurrectMessage()
 }

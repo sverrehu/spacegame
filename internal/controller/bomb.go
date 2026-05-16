@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"log"
 	"math"
 	"math/rand/v2"
 	"time"
@@ -106,7 +105,6 @@ func updateBombLocation(bomb *model.LiveBomb, dt float64) {
 	bomb.Position.Y -= bomb.Dy * dt
 	victim := findCollidingShip(bomb.ShipId, &oldPos, &bomb.Position)
 	if victim != nil {
-		log.Println("hit by bomb")
 		bomb.Delete = true
 		registerHit(victim, model.WeaponBomb, liveWorld.Ships[bomb.ShipId], 30+rand.Float64()*30.0)
 	}
