@@ -16,27 +16,33 @@ import (
 	"github.com/sverrehu/spacegame/internal/utils"
 )
 
-var playerNameFont text.Face
-var messagesFont text.Face
-var scoresFont text.Face
-var statusFont text.Face
-var resurrectFont text.Face
-var helpFont text.Face
+type UI struct {
+	client         ClientInterface
+	playerNameFont text.Face
+	messagesFont   text.Face
+	scoresFont     text.Face
+	statusFont     text.Face
+	resurrectFont  text.Face
+	helpFont       text.Face
 
-var messages GameMessages
-var chatMessages GameMessages
-
-var lastThrust = model.ThrustNone
-var lastTurn = model.TurnNone
-var lastPhaser = false
-var lastBomb = false
-var helpWanted = false
-var client ClientInterface
+	lastThrust model.Thrust
+	lastTurn   model.Turn
+	lastPhaser bool
+	lastBomb   bool
+	helpWanted bool
+}
 
 const width, height = 1500, 850
 
-func startUI(ci ClientInterface) {
-	client = ci
+func NewUI() *UI {
+	return &UI{
+		lastThrust: model.ThrustNone,
+		lastTurn:   model.TurnNone,
+	}
+}
+
+func (ui *UI) startUI(cl ClientInterface) {
+	ui.client = cl
 	initSounds()
 	defer func() { teardownSounds() }()
 	app := gogpu.NewApp(gogpu.DefaultConfig().
@@ -44,8 +50,8 @@ func startUI(ci ClientInterface) {
 		WithSize(width, height).
 		WithContinuousRender(false))
 
-	messages.Clear()
-	chatMessages.Clear()
+	ui.client.GetInfoMessages().Clear()
+	ui.client.GetChatMessages().Clear()
 
 	var canvas *ggcanvas.Canvas
 	var animToken *gogpu.AnimationToken
@@ -53,12 +59,12 @@ func startUI(ci ClientInterface) {
 
 	fontSource := utils.LoadFontSource()
 	defer func() { _ = fontSource.Close() }()
-	playerNameFont = fontSource.Face(16)
-	messagesFont = fontSource.Face(24)
-	scoresFont = fontSource.Face(20)
-	statusFont = fontSource.Face(20)
-	resurrectFont = fontSource.Face(34)
-	helpFont = fontSource.Face(26)
+	ui.playerNameFont = fontSource.Face(16)
+	ui.messagesFont = fontSource.Face(24)
+	ui.scoresFont = fontSource.Face(20)
+	ui.statusFont = fontSource.Face(20)
+	ui.resurrectFont = fontSource.Face(34)
+	ui.helpFont = fontSource.Face(26)
 
 	app.OnDraw(func(dc *gogpu.Context) {
 		if frame == 0 {
@@ -87,7 +93,7 @@ func startUI(ci ClientInterface) {
 			cw, ch = w, h
 		}
 		err := canvas.Draw(func(cc *gg.Context) {
-			renderFrame(cc)
+			ui.renderFrame(cc)
 		})
 		if err != nil {
 			log.Printf("Draw error: %v", err)
@@ -107,191 +113,191 @@ func startUI(ci ClientInterface) {
 		gg.CloseAccelerator()
 	})
 
-	app.EventSource().OnKeyPress(onKeyPress())
-	app.EventSource().OnKeyRelease(onKeyRelease())
+	app.EventSource().OnKeyPress(ui.onKeyPress())
+	app.EventSource().OnKeyRelease(ui.onKeyRelease())
 	if err := app.Run(); err != nil {
 		log.Fatal(err)
 	}
 }
 
-func onKeyPress() func(key gpucontext.Key, mods gpucontext.Modifiers) {
+func (ui *UI) onKeyPress() func(key gpucontext.Key, mods gpucontext.Modifiers) {
 	return func(key gpucontext.Key, mods gpucontext.Modifiers) {
 		if key == gpucontext.KeyLeft {
-			client.TurnLeft()
-			lastTurn = model.TurnLeft
+			ui.client.TurnLeft()
+			ui.lastTurn = model.TurnLeft
 		} else if key == gpucontext.KeyRight {
-			client.TurnRight()
-			lastTurn = model.TurnRight
+			ui.client.TurnRight()
+			ui.lastTurn = model.TurnRight
 		} else if key == gpucontext.KeyUp {
-			client.ThrustForward()
-			lastThrust = model.ThrustForward
+			ui.client.ThrustForward()
+			ui.lastThrust = model.ThrustForward
 		} else if key == gpucontext.KeyDown {
-			client.ThrustBack()
-			lastThrust = model.ThrustBack
-		} else if !lastPhaser && (key == gpucontext.KeySpace || key == gpucontext.KeyLeftControl || key == gpucontext.KeyRightControl) {
-			client.FirePhaser()
-			lastPhaser = true
-		} else if !lastBomb && (key == gpucontext.KeyLeftAlt || key == gpucontext.KeyRightAlt || key == gpucontext.KeyLeftShift || key == gpucontext.KeyRightShift) {
-			client.FireBomb()
-			lastBomb = true
+			ui.client.ThrustBack()
+			ui.lastThrust = model.ThrustBack
+		} else if !ui.lastPhaser && (key == gpucontext.KeySpace || key == gpucontext.KeyLeftControl || key == gpucontext.KeyRightControl) {
+			ui.client.FirePhaser()
+			ui.lastPhaser = true
+		} else if !ui.lastBomb && (key == gpucontext.KeyLeftAlt || key == gpucontext.KeyRightAlt || key == gpucontext.KeyLeftShift || key == gpucontext.KeyRightShift) {
+			ui.client.FireBomb()
+			ui.lastBomb = true
 		} else if key == gpucontext.KeyR {
-			if !client.GetMyShip().IsAlive {
-				client.Resurrect()
+			if !ui.client.GetMyShip().IsAlive {
+				ui.client.Resurrect()
 			}
 		} else if key == gpucontext.KeyF1 {
-			helpWanted = true
+			ui.helpWanted = true
 		}
 	}
 }
 
-func onKeyRelease() func(key gpucontext.Key, mods gpucontext.Modifiers) {
+func (ui *UI) onKeyRelease() func(key gpucontext.Key, mods gpucontext.Modifiers) {
 	return func(key gpucontext.Key, mods gpucontext.Modifiers) {
-		if key == gpucontext.KeyLeft && lastTurn == model.TurnLeft {
-			client.TurnNone()
-			lastTurn = model.TurnNone
-		} else if key == gpucontext.KeyRight && lastTurn == model.TurnRight {
-			client.TurnNone()
-			lastTurn = model.TurnNone
-		} else if key == gpucontext.KeyUp && lastThrust == model.ThrustForward {
-			client.ThrustNone()
-			lastThrust = model.ThrustNone
-		} else if key == gpucontext.KeyDown && lastThrust == model.ThrustBack {
-			client.ThrustNone()
-			lastThrust = model.ThrustNone
+		if key == gpucontext.KeyLeft && ui.lastTurn == model.TurnLeft {
+			ui.client.TurnNone()
+			ui.lastTurn = model.TurnNone
+		} else if key == gpucontext.KeyRight && ui.lastTurn == model.TurnRight {
+			ui.client.TurnNone()
+			ui.lastTurn = model.TurnNone
+		} else if key == gpucontext.KeyUp && ui.lastThrust == model.ThrustForward {
+			ui.client.ThrustNone()
+			ui.lastThrust = model.ThrustNone
+		} else if key == gpucontext.KeyDown && ui.lastThrust == model.ThrustBack {
+			ui.client.ThrustNone()
+			ui.lastThrust = model.ThrustNone
 		} else if key == gpucontext.KeySpace || key == gpucontext.KeyLeftControl || key == gpucontext.KeyRightControl {
-			lastPhaser = false
+			ui.lastPhaser = false
 		} else if key == gpucontext.KeyLeftAlt || key == gpucontext.KeyRightAlt || key == gpucontext.KeyLeftShift || key == gpucontext.KeyRightShift {
-			lastBomb = false
+			ui.lastBomb = false
 		} else if key == gpucontext.KeyF1 {
-			helpWanted = false
+			ui.helpWanted = false
 		}
 	}
 }
 
-func renderFrame(cc *gg.Context) {
-	world := client.GetWorld()
-	myShip := client.GetMyShip()
+func (ui *UI) renderFrame(cc *gg.Context) {
+	world := ui.client.GetWorld()
+	myShip := ui.client.GetMyShip()
 	cc.ClearWithColor(gg.RGBA2(0, 0, 0, 1))
 	// world relative objects
-	drawBounds(cc, world, myShip)
+	ui.drawBounds(cc, world, myShip)
 	for _, star := range world.Stars {
-		drawStar(cc, star, myShip)
+		ui.drawStar(cc, star, myShip)
 	}
 	for _, ship := range world.Ships {
-		drawShip(cc, ship, myShip)
+		ui.drawShip(cc, ship, myShip)
 	}
 	for _, phaser := range world.Phasers {
-		drawPhaser(cc, phaser, myShip)
+		ui.drawPhaser(cc, phaser, myShip)
 	}
 	for _, bomb := range world.Bombs {
-		drawBomb(cc, bomb, myShip)
+		ui.drawBomb(cc, bomb, myShip)
 	}
 	for _, bombPack := range world.BombPacks {
-		drawBombPack(cc, bombPack, myShip)
+		ui.drawBombPack(cc, bombPack, myShip)
 	}
 	for _, explosion := range world.Explosions {
-		drawExplosion(cc, explosion, myShip)
+		ui.drawExplosion(cc, explosion, myShip)
 	}
 	// screen relative objects
-	drawRadar(cc, world, myShip)
-	drawStatus(cc, myShip)
-	drawScores(cc, world)
-	drawAllMessages(cc)
-	drawResurrectMessage(cc, myShip)
-	drawHelp(cc)
+	ui.drawRadar(cc, world, myShip)
+	ui.drawStatus(cc, myShip)
+	ui.drawScores(cc, world)
+	ui.drawAllMessages(cc)
+	ui.drawResurrectMessage(cc, myShip)
+	ui.drawHelp(cc)
 }
 
-func drawBounds(cc *gg.Context, world *model.World, myShip *model.Ship) {
+func (ui *UI) drawBounds(cc *gg.Context, world *model.World, myShip *model.Ship) {
 	cc.SetRGB(0.5, 0.5, 0.5)
-	cc.MoveTo(rX(0, myShip), rY(0, myShip))
-	cc.LineTo(rX(world.Width-1, myShip), rY(0, myShip))
-	cc.LineTo(rX(world.Width-1, myShip), rY(world.Height-1, myShip))
-	cc.LineTo(rX(0, myShip), rY(world.Height-1, myShip))
-	cc.LineTo(rX(0, myShip), rY(0, myShip))
+	cc.MoveTo(ui.rX(0, myShip), ui.rY(0, myShip))
+	cc.LineTo(ui.rX(world.Width-1, myShip), ui.rY(0, myShip))
+	cc.LineTo(ui.rX(world.Width-1, myShip), ui.rY(world.Height-1, myShip))
+	cc.LineTo(ui.rX(0, myShip), ui.rY(world.Height-1, myShip))
+	cc.LineTo(ui.rX(0, myShip), ui.rY(0, myShip))
 	_ = cc.Stroke()
 }
 
-func drawStar(cc *gg.Context, star *model.Star, myShip *model.Ship) {
+func (ui *UI) drawStar(cc *gg.Context, star *model.Star, myShip *model.Ship) {
 	cc.SetRGB(star.Color.R, star.Color.G, star.Color.B)
-	cc.DrawPoint(rX(star.Position.X, myShip), rY(star.Position.Y, myShip), 1.1)
+	cc.DrawPoint(ui.rX(star.Position.X, myShip), ui.rY(star.Position.Y, myShip), 1.1)
 	_ = cc.Fill()
 }
 
-func drawShip(cc *gg.Context, ship *model.Ship, myShip *model.Ship) {
+func (ui *UI) drawShip(cc *gg.Context, ship *model.Ship, myShip *model.Ship) {
 	if !ship.IsAlive {
 		return
 	}
 	worldShape := ship.GetWorldRelativeShape()
 	cc.SetRGB(ship.Color.R, ship.Color.G, ship.Color.B)
-	cc.MoveTo(rX(worldShape[0].X, myShip), rY(worldShape[0].Y, myShip))
+	cc.MoveTo(ui.rX(worldShape[0].X, myShip), ui.rY(worldShape[0].Y, myShip))
 	for _, point := range worldShape[1:] {
-		cc.LineTo(rX(point.X, myShip), rY(point.Y, myShip))
+		cc.LineTo(ui.rX(point.X, myShip), ui.rY(point.Y, myShip))
 	}
 	cc.ClosePath()
 	_ = cc.Fill()
 	if len(ship.Name) > 0 {
 		cc.SetRGB(0.39, 0.39, 1)
-		cc.SetFont(playerNameFont)
-		cc.DrawStringAnchored(ship.Name, rX(ship.Position.X, myShip), rY(ship.Position.Y-17, myShip), 0.5, 1)
+		cc.SetFont(ui.playerNameFont)
+		cc.DrawStringAnchored(ship.Name, ui.rX(ship.Position.X, myShip), ui.rY(ship.Position.Y-17, myShip), 0.5, 1)
 	}
 }
 
-func drawPhaser(cc *gg.Context, phaser *model.Phaser, myShip *model.Ship) {
+func (ui *UI) drawPhaser(cc *gg.Context, phaser *model.Phaser, myShip *model.Ship) {
 	cc.SetRGB(phaser.Color.R, phaser.Color.G, phaser.Color.B)
-	cc.DrawPoint(rX(phaser.Position.X, myShip), rY(phaser.Position.Y, myShip), 1.3)
+	cc.DrawPoint(ui.rX(phaser.Position.X, myShip), ui.rY(phaser.Position.Y, myShip), 1.3)
 	_ = cc.Fill()
 }
 
-func drawBomb(cc *gg.Context, bomb *model.Bomb, myShip *model.Ship) {
+func (ui *UI) drawBomb(cc *gg.Context, bomb *model.Bomb, myShip *model.Ship) {
 	cc.SetRGB(1, 1, 0)
 	diameter := 7.0
 	r := (diameter - 2.0) / 2.0
 	if bomb.Flip {
-		cc.DrawLine(rX(bomb.Position.X, myShip)-r-2, rY(bomb.Position.Y, myShip), rX(bomb.Position.X, myShip)+r+2, rY(bomb.Position.Y, myShip))
-		cc.DrawLine(rX(bomb.Position.X, myShip), rY(bomb.Position.Y, myShip)-r-2, rX(bomb.Position.X, myShip), rY(bomb.Position.Y, myShip)+r+2)
+		cc.DrawLine(ui.rX(bomb.Position.X, myShip)-r-2, ui.rY(bomb.Position.Y, myShip), ui.rX(bomb.Position.X, myShip)+r+2, ui.rY(bomb.Position.Y, myShip))
+		cc.DrawLine(ui.rX(bomb.Position.X, myShip), ui.rY(bomb.Position.Y, myShip)-r-2, ui.rX(bomb.Position.X, myShip), ui.rY(bomb.Position.Y, myShip)+r+2)
 	} else {
-		cc.DrawLine(rX(bomb.Position.X, myShip)-r-1, rY(bomb.Position.Y, myShip)-r-1, rX(bomb.Position.X, myShip)+r+1, rY(bomb.Position.Y, myShip)+r+1)
-		cc.DrawLine(rX(bomb.Position.X, myShip)-r-1, rY(bomb.Position.Y, myShip)+r+1, rX(bomb.Position.X, myShip)+r+1, rY(bomb.Position.Y, myShip)-r-1)
+		cc.DrawLine(ui.rX(bomb.Position.X, myShip)-r-1, ui.rY(bomb.Position.Y, myShip)-r-1, ui.rX(bomb.Position.X, myShip)+r+1, ui.rY(bomb.Position.Y, myShip)+r+1)
+		cc.DrawLine(ui.rX(bomb.Position.X, myShip)-r-1, ui.rY(bomb.Position.Y, myShip)+r+1, ui.rX(bomb.Position.X, myShip)+r+1, ui.rY(bomb.Position.Y, myShip)-r-1)
 	}
 	_ = cc.Stroke()
 	cc.SetRGB(bomb.Color.R, bomb.Color.G, bomb.Color.B)
-	cc.DrawCircle(rX(bomb.Position.X, myShip), rY(bomb.Position.Y, myShip), r)
+	cc.DrawCircle(ui.rX(bomb.Position.X, myShip), ui.rY(bomb.Position.Y, myShip), r)
 	_ = cc.Fill()
 }
 
-func drawBombPack(cc *gg.Context, bombPack *model.BombPack, myShip *model.Ship) {
+func (ui *UI) drawBombPack(cc *gg.Context, bombPack *model.BombPack, myShip *model.Ship) {
 	diameter := 7.0
 	d2 := diameter - 2.0
 	r := d2 / 2.0
 	cc.SetRGB(bombPack.Color.R, bombPack.Color.G, bombPack.Color.B)
-	cc.DrawCircle(rX(bombPack.Position.X-d2, myShip), rY(bombPack.Position.Y-d2, myShip), r)
-	cc.DrawCircle(rX(bombPack.Position.X, myShip), rY(bombPack.Position.Y-d2, myShip), r)
-	cc.DrawCircle(rX(bombPack.Position.X-r, myShip), rY(bombPack.Position.Y, myShip), r)
+	cc.DrawCircle(ui.rX(bombPack.Position.X-d2, myShip), ui.rY(bombPack.Position.Y-d2, myShip), r)
+	cc.DrawCircle(ui.rX(bombPack.Position.X, myShip), ui.rY(bombPack.Position.Y-d2, myShip), r)
+	cc.DrawCircle(ui.rX(bombPack.Position.X-r, myShip), ui.rY(bombPack.Position.Y, myShip), r)
 	_ = cc.Fill()
 }
 
-func drawExplosion(cc *gg.Context, explosion *model.Explosion, myShip *model.Ship) {
+func (ui *UI) drawExplosion(cc *gg.Context, explosion *model.Explosion, myShip *model.Ship) {
 	cc.SetRGB(0.8, 0.8, 1.0)
-	cc.DrawCircle(rX(explosion.Position.X, myShip), rY(explosion.Position.Y, myShip), explosion.OuterRadius)
+	cc.DrawCircle(ui.rX(explosion.Position.X, myShip), ui.rY(explosion.Position.Y, myShip), explosion.OuterRadius)
 	_ = cc.Fill()
 	if explosion.InnerRadius > 0 {
 		cc.SetRGB(0, 0, 0)
-		cc.DrawCircle(rX(explosion.Position.X, myShip), rY(explosion.Position.Y, myShip), explosion.InnerRadius)
+		cc.DrawCircle(ui.rX(explosion.Position.X, myShip), ui.rY(explosion.Position.Y, myShip), explosion.InnerRadius)
 		_ = cc.Fill()
 	}
 }
 
-func drawAllMessages(cc *gg.Context) {
-	drawMessages(cc, &messages, 1.0, 0.78, 0.0, 0)
-	drawMessages(cc, &chatMessages, 1.0, 1.0, 0.0, height/2)
+func (ui *UI) drawAllMessages(cc *gg.Context) {
+	ui.drawMessages(cc, ui.client.GetInfoMessages(), 1.0, 0.78, 0.0, 0)
+	ui.drawMessages(cc, ui.client.GetChatMessages(), 1.0, 1.0, 0.0, height/2)
 }
 
-func drawMessages(cc *gg.Context, messages *GameMessages, r, g, b float64, startY float64) {
-	lineHeight := messagesFont.Metrics().Ascent + messagesFont.Metrics().Descent
+func (ui *UI) drawMessages(cc *gg.Context, messages *GameMessages, r, g, b float64, startY float64) {
+	lineHeight := ui.messagesFont.Metrics().Ascent + ui.messagesFont.Metrics().Descent
 	y := startY + lineHeight
 	x := 10.0
 	cc.SetRGB(r, g, b)
-	cc.SetFont(messagesFont)
+	cc.SetFont(ui.messagesFont)
 	for _, msg := range messages.GetMessages() {
 		cc.DrawString(msg.Text, x, y)
 		y += lineHeight
@@ -299,7 +305,7 @@ func drawMessages(cc *gg.Context, messages *GameMessages, r, g, b float64, start
 	_ = cc.Fill()
 }
 
-func drawRadar(cc *gg.Context, world *model.World, myShip *model.Ship) {
+func (ui *UI) drawRadar(cc *gg.Context, world *model.World, myShip *model.Ship) {
 	radarWidth := width / 7.0
 	radarHeight := (radarWidth * world.Height) / world.Width
 	radarX := width - radarWidth - 10
@@ -341,16 +347,16 @@ func drawRadar(cc *gg.Context, world *model.World, myShip *model.Ship) {
 	_ = cc.Stroke()
 }
 
-func drawStatus(cc *gg.Context, myShip *model.Ship) {
-	ascent := statusFont.Metrics().Ascent
-	lineHeight := ascent + messagesFont.Metrics().Descent
-	labelWidth := statusFont.Advance("Damage: ") // longest status indicator
+func (ui *UI) drawStatus(cc *gg.Context, myShip *model.Ship) {
+	ascent := ui.statusFont.Metrics().Ascent
+	lineHeight := ascent + ui.messagesFont.Metrics().Descent
+	labelWidth := ui.statusFont.Advance("Damage: ") // longest status indicator
 	meterWidth := 2 * labelWidth
 	x := 10.0
 	x2 := x + labelWidth
 	y := height - 3*lineHeight
 	cc.SetRGB(0, 1, 0)
-	cc.SetFont(scoresFont)
+	cc.SetFont(ui.scoresFont)
 	cc.DrawString("Bombs:", x, y)
 	cc.DrawString(fmt.Sprintf("%d", myShip.BombsLeft), x2, y)
 	cc.DrawString("Heat:", x, y+lineHeight)
@@ -376,23 +382,23 @@ func drawStatus(cc *gg.Context, myShip *model.Ship) {
 	_ = cc.Stroke()
 }
 
-func drawScores(cc *gg.Context, world *model.World) {
+func (ui *UI) drawScores(cc *gg.Context, world *model.World) {
 	scores := toScores(slices.Collect(maps.Values(world.Ships)))
 	lines := make([]string, 0, len(scores))
 	maxWidth := 0.0
 	for _, score := range scores {
 		s := fmt.Sprintf("%5.2f (%3d/%3d) %-15.15s", score.Ratio, score.Score, score.AntiScore, score.Name)
-		w := scoresFont.Advance(s)
+		w := ui.scoresFont.Advance(s)
 		if w > maxWidth {
 			maxWidth = w
 		}
 		lines = append(lines, s)
 	}
-	lineHeight := scoresFont.Metrics().Ascent + messagesFont.Metrics().Descent
+	lineHeight := ui.scoresFont.Metrics().Ascent + ui.scoresFont.Metrics().Descent
 	x := width - maxWidth
 	y := lineHeight
 	cc.SetRGB(1, 1, 0)
-	cc.SetFont(scoresFont)
+	cc.SetFont(ui.scoresFont)
 	for _, line := range lines {
 		cc.DrawString(line, x, y)
 		y += lineHeight
@@ -400,18 +406,18 @@ func drawScores(cc *gg.Context, world *model.World) {
 	_ = cc.Fill()
 }
 
-func drawResurrectMessage(cc *gg.Context, myShip *model.Ship) {
+func (ui *UI) drawResurrectMessage(cc *gg.Context, myShip *model.Ship) {
 	if myShip.IsAlive {
 		return
 	}
 	cc.SetRGB(1, 1, 1)
-	cc.SetFont(resurrectFont)
+	cc.SetFont(ui.resurrectFont)
 	cc.DrawStringAnchored("You are dead. Press R to respawn.", width/2, height/2, 0.5, 0.5)
 	_ = cc.Fill()
 }
 
-func drawHelp(cc *gg.Context) {
-	if !helpWanted {
+func (ui *UI) drawHelp(cc *gg.Context) {
+	if !ui.helpWanted {
 		return
 	}
 	lines := [...]string{
@@ -427,17 +433,17 @@ func drawHelp(cc *gg.Context) {
 		"R                 Respawn",
 		//"T                 Enter a Chat Line",
 	}
-	lineHeight := helpFont.Metrics().Ascent + helpFont.Metrics().Descent
+	lineHeight := ui.helpFont.Metrics().Ascent + ui.helpFont.Metrics().Descent
 	maxWidth := 0.0
 	for _, line := range lines {
-		w := helpFont.Advance(line)
+		w := ui.helpFont.Advance(line)
 		if w > maxWidth {
 			maxWidth = w
 		}
 	}
 	x := (width - maxWidth) / 2.0
 	y := (height - float64(len(lines))*lineHeight) / 2.0
-	cc.SetFont(helpFont)
+	cc.SetFont(ui.helpFont)
 	cc.SetRGB(1, 1, 1)
 	for _, line := range lines {
 		cc.DrawString(line, x, y)
@@ -446,10 +452,10 @@ func drawHelp(cc *gg.Context) {
 	_ = cc.Stroke()
 }
 
-func rX(x float64, myShip *model.Ship) float64 {
+func (ui *UI) rX(x float64, myShip *model.Ship) float64 {
 	return x - myShip.Position.X + width/2
 }
 
-func rY(y float64, myShip *model.Ship) float64 {
+func (ui *UI) rY(y float64, myShip *model.Ship) float64 {
 	return y - myShip.Position.Y + height/2
 }
