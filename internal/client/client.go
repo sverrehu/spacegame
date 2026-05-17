@@ -33,7 +33,7 @@ type Client struct {
 	server          ServerAdapter
 	world           model.World
 	myShipId        int32
-	messages        GameMessages
+	infoMessages    GameMessages
 	chatMessages    GameMessages
 	worldReadyMutex sync.Mutex
 	worldReadyCond  *sync.Cond
@@ -148,7 +148,7 @@ func (c *Client) handleUpdates(updates []model.AnyObjectUpdate) {
 }
 
 func (c *Client) addInfoMessage(text string) {
-	c.messages.Add(text, 4*time.Second)
+	c.infoMessages.Add(text, 4*time.Second)
 }
 
 func (c *Client) addChatMessage(text string) {
@@ -200,7 +200,7 @@ func (c *Client) Resurrect() {
 }
 
 func (c *Client) GetInfoMessages() *GameMessages {
-	return &c.messages
+	return &c.infoMessages
 }
 
 func (c *Client) GetChatMessages() *GameMessages {
