@@ -5,6 +5,7 @@ import (
 	"net"
 	"strconv"
 	"sync"
+	"time"
 
 	"github.com/sverrehu/spacegame/internal/model"
 )
@@ -21,6 +22,8 @@ type ClientInterface interface {
 	FirePhaser()
 	FireBomb()
 	Resurrect()
+	GetInfoMessages() *GameMessages
+	GetChatMessages() *GameMessages
 }
 
 type Client struct {
@@ -30,6 +33,8 @@ type Client struct {
 	server          ServerAdapter
 	world           model.World
 	myShipId        int32
+	messages        GameMessages
+	chatMessages    GameMessages
 	worldReadyMutex sync.Mutex
 	worldReadyCond  *sync.Cond
 }
@@ -48,7 +53,8 @@ func (c *Client) Start() {
 	c.server = NewServerAdapter(c.connect(c.host, c.port), c)
 	c.server.sendEnterMessage(c.name)
 	c.waitForWorldReady()
-	startUI(c)
+	ui := NewUI()
+	ui.startUI(c)
 }
 
 func (c *Client) connect(host string, port int) net.Conn {
@@ -141,6 +147,14 @@ func (c *Client) handleUpdates(updates []model.AnyObjectUpdate) {
 	}
 }
 
+func (c *Client) addInfoMessage(text string) {
+	c.messages.Add(text, 4*time.Second)
+}
+
+func (c *Client) addChatMessage(text string) {
+	c.chatMessages.Add(text, 6*time.Second)
+}
+
 func (c *Client) GetWorld() *model.World {
 	return &c.world
 }
@@ -183,4 +197,12 @@ func (c *Client) FireBomb() {
 
 func (c *Client) Resurrect() {
 	c.server.sendResurrectMessage()
+}
+
+func (c *Client) GetInfoMessages() *GameMessages {
+	return &c.messages
+}
+
+func (c *Client) GetChatMessages() *GameMessages {
+	return &c.chatMessages
 }

@@ -3,7 +3,6 @@ package client
 import (
 	"log"
 	"net"
-	"time"
 
 	"github.com/sverrehu/spacegame/internal/model"
 	"github.com/sverrehu/spacegame/internal/network"
@@ -12,6 +11,8 @@ import (
 type IncomingHandler interface {
 	welcome(id int32, width, height float64, u []model.AnyObjectUpdate)
 	handleUpdates(updates []model.AnyObjectUpdate)
+	addInfoMessage(text string)
+	addChatMessage(text string)
 }
 
 type ServerAdapter struct {
@@ -75,9 +76,9 @@ func (a *ServerAdapter) handleHitByMessage(msg network.HitByMessage) {
 func (a *ServerAdapter) handleNewInGameMessageMessage(msg network.InGameMessageMessage) {
 	switch msg.Type {
 	case network.InGameInfoMessage:
-		messages.Add(msg.Text, 4*time.Second)
+		a.incomingHandler.addInfoMessage(msg.Text)
 	case network.InGameChatMessage:
-		chatMessages.Add(msg.Text, 6*time.Second)
+		a.incomingHandler.addChatMessage(msg.Text)
 	}
 }
 
