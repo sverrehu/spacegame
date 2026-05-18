@@ -252,16 +252,18 @@ func (ui *UI) drawBomb(cc *gg.Context, bomb *model.Bomb, myShip *model.Ship) {
 	cc.SetRGB(1, 1, 0)
 	diameter := 7.0
 	r := (diameter - 2.0) / 2.0
+	sx := ui.rX(bomb.Position.X, myShip)
+	sy := ui.rY(bomb.Position.Y, myShip)
 	if bomb.Flip {
-		cc.DrawLine(ui.rX(bomb.Position.X, myShip)-r-2, ui.rY(bomb.Position.Y, myShip), ui.rX(bomb.Position.X, myShip)+r+2, ui.rY(bomb.Position.Y, myShip))
-		cc.DrawLine(ui.rX(bomb.Position.X, myShip), ui.rY(bomb.Position.Y, myShip)-r-2, ui.rX(bomb.Position.X, myShip), ui.rY(bomb.Position.Y, myShip)+r+2)
+		cc.DrawLine(sx-r-2, sy, sx+r+2, sy)
+		cc.DrawLine(sx, sy-r-2, sx, sy+r+2)
 	} else {
-		cc.DrawLine(ui.rX(bomb.Position.X, myShip)-r-1, ui.rY(bomb.Position.Y, myShip)-r-1, ui.rX(bomb.Position.X, myShip)+r+1, ui.rY(bomb.Position.Y, myShip)+r+1)
-		cc.DrawLine(ui.rX(bomb.Position.X, myShip)-r-1, ui.rY(bomb.Position.Y, myShip)+r+1, ui.rX(bomb.Position.X, myShip)+r+1, ui.rY(bomb.Position.Y, myShip)-r-1)
+		cc.DrawLine(sx-r-1, sy-r-1, sx+r+1, sy+r+1)
+		cc.DrawLine(sx-r-1, sy+r+1, sx+r+1, sy-r-1)
 	}
 	_ = cc.Stroke()
 	cc.SetRGB(bomb.Color.R, bomb.Color.G, bomb.Color.B)
-	cc.DrawCircle(ui.rX(bomb.Position.X, myShip), ui.rY(bomb.Position.Y, myShip), r)
+	cc.DrawCircle(sx, sy, r)
 	_ = cc.Fill()
 }
 
