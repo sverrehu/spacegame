@@ -74,6 +74,7 @@ If this variable is not set, you will get a cryptic error message: `undefined: G
 
 ## TODO
 
+* Make the controller a struct.
 * Implement everything that is missing.
     * Chat messages.
-* Add API to let people make robot players.
+* Add an API to let people make robot players.
