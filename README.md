@@ -74,7 +74,6 @@ If this variable is not set, you will get a cryptic error message: `undefined: G
 
 ## TODO
 
-* Adjust speed of ship, phaser and bombs to be playable.
 * Implement everything that is missing.
     * Chat messages.
 * Add API to let people make robot players.
