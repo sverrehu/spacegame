@@ -22,10 +22,6 @@ const UpdatesPerSecond = 60
 var liveWorld model.LiveWorld
 var updatesHandler UpdatesHandler
 
-func SetupTestWorld() {
-	SetupWorld()
-}
-
 func SetupWorld() {
 	liveWorld = model.NewLiveWorld(DefaultWidth, DefaultHeight)
 	createStars()

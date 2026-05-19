@@ -22,7 +22,7 @@ var clientAdapters map[int32]*ClientAdapter
 func StartServer(port int) {
 	updatesHandler = updatesHandlerImpl{}
 	clientAdapters = make(map[int32]*ClientAdapter)
-	controller.SetupTestWorld()
+	controller.SetupWorld()
 	startListening(port)
 	wg.Add(1)
 	go controller.GameLoop(&updatesHandler)
