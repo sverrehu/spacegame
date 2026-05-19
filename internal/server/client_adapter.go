@@ -15,14 +15,16 @@ type ClientAdapter struct {
 	transceiver *network.TcpTransceiver
 	Id          int32
 	ShipId      int32
+	ctrl        *controller.Controller
 }
 
-func NewClientAdapter(conn net.Conn) *ClientAdapter {
+func NewClientAdapter(conn net.Conn, ct *controller.Controller) *ClientAdapter {
 	a := ClientAdapter{}
 	id := lastId.Add(1)
 	a.Id = id
 	transceiver := network.NewTransceiver(conn, a.HandleIncoming)
 	a.transceiver = transceiver
+	a.ctrl = ct
 	return &a
 }
 
@@ -50,8 +52,8 @@ func (a *ClientAdapter) HandleIncoming(msg network.Message) error {
 
 func (a *ClientAdapter) HandleEnterMessage(msg network.EnterMessage) {
 	log.Printf("%s wants to join the game", msg.Name)
-	ship := controller.CreateShip(msg.Name)
-	world, updates := controller.GetWorldAndUpdates()
+	ship := a.ctrl.CreateShip(msg.Name)
+	world, updates := a.ctrl.GetWorldAndUpdates()
 	err := a.transceiver.Send(network.NewWelcomeMessage(ship.Id, world.Width, world.Height, updates))
 	if err != nil {
 		log.Printf("Error sending welcome message: %v", err)
@@ -70,29 +72,29 @@ func (a *ClientAdapter) HandleResurrectMessage() {
 	if a.ShipId == 0 {
 		return
 	}
-	controller.Resurrect(a.ShipId)
+	a.ctrl.Resurrect(a.ShipId)
 }
 
 func (a *ClientAdapter) HandleThrustMessage(msg network.ThrustMessage) {
 	if a.ShipId == 0 {
 		return
 	}
-	controller.SetThrust(a.ShipId, msg.Thrust)
+	a.ctrl.SetThrust(a.ShipId, msg.Thrust)
 }
 
 func (a *ClientAdapter) HandleTurnMessage(msg network.TurnMessage) {
 	if a.ShipId == 0 {
 		return
 	}
-	controller.SetTurn(a.ShipId, msg.Turn)
+	a.ctrl.SetTurn(a.ShipId, msg.Turn)
 }
 
 func (a *ClientAdapter) HandleFirePhaserMessage() {
-	controller.CreatePhaser(a.ShipId)
+	a.ctrl.CreatePhaser(a.ShipId)
 }
 
 func (a *ClientAdapter) HandleFireBombMessage() {
-	controller.CreateBomb(a.ShipId)
+	a.ctrl.CreateBomb(a.ShipId)
 }
 
 func (a *ClientAdapter) HandleNetworkError(err error) bool {
@@ -100,8 +102,8 @@ func (a *ClientAdapter) HandleNetworkError(err error) bool {
 		return false
 	}
 	log.Printf("Client network error: %v", err)
-	name := controller.GetShipName(a.ShipId)
-	controller.RemoveShip(a.ShipId)
+	name := a.ctrl.GetShipName(a.ShipId)
+	a.ctrl.RemoveShip(a.ShipId)
 	delete(clientAdapters, a.Id)
 	SendInfoToAll(name + " crashed into another dimension")
 	a.Close()

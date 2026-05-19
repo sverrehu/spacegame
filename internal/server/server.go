@@ -18,21 +18,23 @@ type updatesHandlerImpl struct {
 var updatesHandler updatesHandlerImpl
 var wg sync.WaitGroup
 var clientAdapters map[int32]*ClientAdapter
+var ctrl *controller.Controller
 
 func StartServer(port int) {
 	updatesHandler = updatesHandlerImpl{}
 	clientAdapters = make(map[int32]*ClientAdapter)
-	controller.SetupWorld()
-	startListening(port)
+	ctrl = controller.NewController()
+	ctrl.SetupWorld()
+	startListening(port, ctrl)
 	wg.Add(1)
-	go controller.GameLoop(&updatesHandler)
+	go ctrl.GameLoop(&updatesHandler)
 }
 
 func WaitForServer() {
 	wg.Wait()
 }
 
-func startListening(port int) {
+func startListening(port int, ctrl *controller.Controller) {
 	log.Printf("Starting server on port %d", port)
 	listener, err := net.Listen("tcp", ":"+strconv.Itoa(port))
 	if err != nil {
@@ -45,14 +47,14 @@ func startListening(port int) {
 				log.Println("Error accepting conn:", err)
 				continue
 			}
-			go handleConnection(conn)
+			go handleConnection(conn, ctrl)
 		}
 	}()
 }
 
-func handleConnection(conn net.Conn) {
+func handleConnection(conn net.Conn, ctrl *controller.Controller) {
 	log.Printf("Handling connection from %s", conn.RemoteAddr())
-	ca := NewClientAdapter(conn)
+	ca := NewClientAdapter(conn, ctrl)
 	clientAdapters[ca.Id] = ca
 }
 

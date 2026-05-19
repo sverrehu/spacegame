@@ -16,11 +16,11 @@ const bombMaxDistance = 750 // pixels
 const bombShipOffset = 13
 const bombFlipSpeed = 7 // flips per second
 
-func CreateBomb(shipId int32) *model.Bomb {
+func (c *Controller) CreateBomb(shipId int32) *model.Bomb {
 	// Called from outside the controller
-	liveWorld.Mut.Lock()
-	defer liveWorld.Mut.Unlock()
-	owner := liveWorld.Ships[shipId]
+	c.liveWorld.Mut.Lock()
+	defer c.liveWorld.Mut.Unlock()
+	owner := c.liveWorld.Ships[shipId]
 	if owner == nil {
 		return nil
 	}
@@ -35,19 +35,19 @@ func CreateBomb(shipId int32) *model.Bomb {
 	bomb.Direction = owner.Direction
 	bomb.Dx = bombMaxSpeed * math.Cos(dir)
 	bomb.Dy = bombMaxSpeed * math.Sin(dir)
-	liveWorld.Bombs[bomb.Id] = &bomb
+	c.liveWorld.Bombs[bomb.Id] = &bomb
 	owner.BombsLeft--
 	owner.Changed = true
 	return &bomb.Bomb
 }
 
-func updateBomb(bomb *model.LiveBomb, dt float64) { // dt - delta time (time passed since last update) in seconds
-	updateBombFlip(bomb)
-	updateBombDirection(bomb, dt)
-	updateBombLocation(bomb, dt)
+func (c *Controller) updateBomb(bomb *model.LiveBomb, dt float64) { // dt - delta time (time passed since last update) in seconds
+	c.updateBombFlip(bomb)
+	c.updateBombDirection(bomb, dt)
+	c.updateBombLocation(bomb, dt)
 }
 
-func updateBombFlip(bomb *model.LiveBomb) {
+func (c *Controller) updateBombFlip(bomb *model.LiveBomb) {
 	mod := int(float64(time.Now().UnixMilli())/(1.0/bombFlipSpeed)/1000.0) % 2
 	wantedFlip := false
 	if mod == 0 {
@@ -59,9 +59,9 @@ func updateBombFlip(bomb *model.LiveBomb) {
 	}
 }
 
-func updateBombDirection(bomb *model.LiveBomb, dt float64) {
-	owner := liveWorld.Ships[bomb.ShipId]
-	enemyShip := liveWorld.GetClosestShip(owner, &bomb.Position)
+func (c *Controller) updateBombDirection(bomb *model.LiveBomb, dt float64) {
+	owner := c.liveWorld.Ships[bomb.ShipId]
+	enemyShip := c.liveWorld.GetClosestShip(owner, &bomb.Position)
 	if enemyShip == nil {
 		return
 	}
@@ -99,17 +99,17 @@ func updateBombDirection(bomb *model.LiveBomb, dt float64) {
 	}
 }
 
-func updateBombLocation(bomb *model.LiveBomb, dt float64) {
+func (c *Controller) updateBombLocation(bomb *model.LiveBomb, dt float64) {
 	oldPos := bomb.Position
 	bomb.Position.X += bomb.Dx * dt
 	bomb.Position.Y -= bomb.Dy * dt
-	victim := findCollidingShip(bomb.ShipId, &oldPos, &bomb.Position)
+	victim := c.findCollidingShip(bomb.ShipId, &oldPos, &bomb.Position)
 	if victim != nil {
 		bomb.Delete = true
-		registerHit(victim, model.WeaponBomb, liveWorld.Ships[bomb.ShipId], 30+rand.Float64()*30.0)
+		c.registerHit(victim, model.WeaponBomb, c.liveWorld.Ships[bomb.ShipId], 30+rand.Float64()*30.0)
 	}
 	bomb.Distance += utils.LineLength(&oldPos, &bomb.Position)
-	if bomb.Distance >= bombMaxDistance || liveWorld.IsOutside(&bomb.Position) {
+	if bomb.Distance >= bombMaxDistance || c.liveWorld.IsOutside(&bomb.Position) {
 		bomb.Delete = true
 	}
 	bomb.Changed = true

@@ -31,17 +31,17 @@ func init() {
 	})
 }
 
-func CreateShip(name string) *model.Ship {
+func (c *Controller) CreateShip(name string) *model.Ship {
 	// Called from outside the controller
-	liveWorld.Mut.Lock()
-	defer liveWorld.Mut.Unlock()
-	loc := findGoodLocation(nil)
-	ship := model.NewLiveShip(loc, nextColor(), 2*math.Pi*rand.Float64(), name, shipInitialBombsLeft)
-	liveWorld.Ships[ship.Id] = &ship
+	c.liveWorld.Mut.Lock()
+	defer c.liveWorld.Mut.Unlock()
+	loc := c.findGoodLocation(nil)
+	ship := model.NewLiveShip(loc, c.nextColor(), 2*math.Pi*rand.Float64(), name, shipInitialBombsLeft)
+	c.liveWorld.Ships[ship.Id] = &ship
 	return &ship.Ship
 }
 
-func nextColor() utils.Color {
+func (c *Controller) nextColor() utils.Color {
 	col := shipColors[nextColorIndex]
 	nextColorIndex++
 	if nextColorIndex >= len(shipColors) {
@@ -50,11 +50,11 @@ func nextColor() utils.Color {
 	return col
 }
 
-func RemoveShip(shipId int32) {
+func (c *Controller) RemoveShip(shipId int32) {
 	// Called from outside the controller
-	liveWorld.Mut.Lock()
-	defer liveWorld.Mut.Unlock()
-	ship := liveWorld.Ships[shipId]
+	c.liveWorld.Mut.Lock()
+	defer c.liveWorld.Mut.Unlock()
+	ship := c.liveWorld.Ships[shipId]
 	if ship == nil {
 		return
 	}
@@ -63,14 +63,14 @@ func RemoveShip(shipId int32) {
 	ship.IsAlive = false
 }
 
-func updateShip(ship *model.LiveShip, dt float64) { // dt - delta time (time passed since last update) in seconds
+func (c *Controller) updateShip(ship *model.LiveShip, dt float64) { // dt - delta time (time passed since last update) in seconds
 	if !ship.IsAlive {
 		return
 	}
-	updateShipDirection(ship, dt)
-	updateShipAcceleration(ship, dt)
-	updateShipLocation(ship, dt)
-	checkCollisionWithBombPacks(ship)
+	c.updateShipDirection(ship, dt)
+	c.updateShipAcceleration(ship, dt)
+	c.updateShipLocation(ship, dt)
+	c.checkCollisionWithBombPacks(ship)
 	if ship.PhaserHeat > 0 {
 		ship.SubPhaserHeat(shipPhaserHeatReductionSpeed * dt)
 	}
@@ -79,7 +79,7 @@ func updateShip(ship *model.LiveShip, dt float64) { // dt - delta time (time pas
 	}
 }
 
-func updateShipDirection(ship *model.LiveShip, dt float64) {
+func (c *Controller) updateShipDirection(ship *model.LiveShip, dt float64) {
 	if ship.Turn == model.TurnNone {
 		return
 	}
@@ -93,7 +93,7 @@ func updateShipDirection(ship *model.LiveShip, dt float64) {
 	ship.BaseObject.Changed = true
 }
 
-func updateShipAcceleration(ship *model.LiveShip, dt float64) {
+func (c *Controller) updateShipAcceleration(ship *model.LiveShip, dt float64) {
 	if ship.Thrust == model.ThrustNone {
 		return
 	}
@@ -109,7 +109,7 @@ func updateShipAcceleration(ship *model.LiveShip, dt float64) {
 	ship.BaseObject.Changed = true
 }
 
-func updateShipLocation(ship *model.LiveShip, dt float64) {
+func (c *Controller) updateShipLocation(ship *model.LiveShip, dt float64) {
 	if ship.DriftX == 0.0 && ship.DriftY == 0.0 {
 		return
 	}
@@ -127,28 +127,28 @@ func updateShipLocation(ship *model.LiveShip, dt float64) {
 	ship.Position.Y -= ship.DriftY * dt
 	if ship.Position.X < 0.0 {
 		ship.Position.X = 0.0
-	} else if ship.Position.X >= liveWorld.Width {
-		ship.Position.X = liveWorld.Width - 1.0
+	} else if ship.Position.X >= c.liveWorld.Width {
+		ship.Position.X = c.liveWorld.Width - 1.0
 	}
 	if ship.Position.Y < 0.0 {
 		ship.Position.Y = 0.0
-	} else if ship.Position.Y >= liveWorld.Height {
-		ship.Position.Y = liveWorld.Height - 1.0
+	} else if ship.Position.Y >= c.liveWorld.Height {
+		ship.Position.Y = c.liveWorld.Height - 1.0
 	}
 	ship.BaseObject.Changed = true
 }
 
-func checkCollisionWithBombPacks(ship *model.LiveShip) {
-	for _, bombPack := range liveWorld.BombPacks {
-		if isBombPackCollision(ship, bombPack) {
+func (c *Controller) checkCollisionWithBombPacks(ship *model.LiveShip) {
+	for _, bombPack := range c.liveWorld.BombPacks {
+		if c.isBombPackCollision(ship, bombPack) {
 			ship.BombsLeft += bombPack.BombsLeft
 			ship.Changed = true
-			removeBombPack(bombPack)
+			c.removeBombPack(bombPack)
 		}
 	}
 }
 
-func isBombPackCollision(ship *model.LiveShip, bombPack *model.LiveBombPack) bool {
+func (c *Controller) isBombPackCollision(ship *model.LiveShip, bombPack *model.LiveBombPack) bool {
 	shape := ship.GetWorldRelativeShape()
 	p1 := new(utils.NewPoint(bombPack.Position.X-BombPackRadius, bombPack.Position.Y-BombPackRadius))
 	p2 := new(utils.NewPoint(bombPack.Position.X+BombPackRadius, bombPack.Position.Y+BombPackRadius))
@@ -157,7 +157,7 @@ func isBombPackCollision(ship *model.LiveShip, bombPack *model.LiveBombPack) boo
 	return utils.ShapeAndLineIntersect(shape, p1, p2) || utils.ShapeAndLineIntersect(shape, p3, p4)
 }
 
-func resurrectShip(ship *model.LiveShip) {
+func (c *Controller) resurrectShip(ship *model.LiveShip) {
 	if ship == nil {
 		return
 	}
@@ -168,13 +168,13 @@ func resurrectShip(ship *model.LiveShip) {
 	ship.PhaserHeat = 0
 	ship.DriftX = 0
 	ship.DriftY = 0
-	ship.Position = findGoodLocation(ship)
+	ship.Position = c.findGoodLocation(ship)
 	ship.Direction = 2 * math.Pi * rand.Float64()
 	ship.Turn = model.TurnNone
 	ship.Thrust = model.ThrustNone
 }
 
-func registerHit(ship *model.LiveShip, t model.WeaponType, hitter *model.LiveShip, damage float64) {
+func (c *Controller) registerHit(ship *model.LiveShip, t model.WeaponType, hitter *model.LiveShip, damage float64) {
 	if !ship.IsAlive {
 		return
 	}
@@ -183,40 +183,40 @@ func registerHit(ship *model.LiveShip, t model.WeaponType, hitter *model.LiveShi
 		ship.AntiScore++
 		hitter.Score++
 		hitter.Changed = true
-		killShip(ship)
+		c.killShip(ship)
 	}
-	updatesHandler.HandleHitBy(ship, hitter, t, !ship.IsAlive)
+	c.updatesHandler.HandleHitBy(ship, hitter, t, !ship.IsAlive)
 }
 
-func killShip(ship *model.LiveShip) {
+func (c *Controller) killShip(ship *model.LiveShip) {
 	ship.IsAlive = false
 	ship.BaseObject.Changed = true
-	CreateBombPack(ship)
-	CreateExplosion(ship)
+	c.CreateBombPack(ship)
+	c.CreateExplosion(ship)
 }
 
-func findGoodLocation(s *model.LiveShip) utils.Point {
-	collidables := liveWorld.GetCollidables(s)
+func (c *Controller) findGoodLocation(s *model.LiveShip) utils.Point {
+	collidables := c.liveWorld.GetCollidables(s)
 	if len(collidables) == 0 {
-		return utils.NewPoint(liveWorld.Width/2, liveWorld.Height/2)
+		return utils.NewPoint(c.liveWorld.Width/2, c.liveWorld.Height/2)
 	}
-	minx := liveWorld.Width / 100.0
-	maxx := liveWorld.Width - minx
-	miny := liveWorld.Height / 100.0
-	maxy := liveWorld.Height - miny
+	minx := c.liveWorld.Width / 100.0
+	maxx := c.liveWorld.Width - minx
+	miny := c.liveWorld.Height / 100.0
+	maxy := c.liveWorld.Height - miny
 	x := 0.0
 	y := 0.0
 	for i := 0; i < 100; i++ {
 		x = minx + rand.Float64()*(maxx-minx)
 		y = miny + rand.Float64()*(maxy-miny)
-		if getDistanceToClosestCollidable(collidables, x, y) >= minx*20 {
+		if c.getDistanceToClosestCollidable(collidables, x, y) >= minx*20 {
 			break
 		}
 	}
 	return utils.NewPoint(x, y)
 }
 
-func getDistanceToClosestCollidable(collidables []*model.BaseObject, x, y float64) float64 {
+func (c *Controller) getDistanceToClosestCollidable(collidables []*model.BaseObject, x, y float64) float64 {
 	minDist := math.MaxFloat64
 	point := new(utils.NewPoint(x, y))
 	for _, collidable := range collidables {
@@ -228,6 +228,6 @@ func getDistanceToClosestCollidable(collidables []*model.BaseObject, x, y float6
 	return minDist
 }
 
-func isPhaserOverheated(ship *model.LiveShip) bool {
+func (c *Controller) isPhaserOverheated(ship *model.LiveShip) bool {
 	return ship.PhaserHeat > 75
 }

@@ -5,12 +5,12 @@ import "github.com/sverrehu/spacegame/internal/model"
 const ExplosionMaxRadius = 25
 const ExplosionRadiusChangePerSecond = 90
 
-func CreateExplosion(ship *model.LiveShip) {
+func (c *Controller) CreateExplosion(ship *model.LiveShip) {
 	explosion := model.NewLiveExplosion(ship.Position)
-	liveWorld.Explosions[explosion.Id] = &explosion
+	c.liveWorld.Explosions[explosion.Id] = &explosion
 }
 
-func updateExplosion(explosion *model.LiveExplosion, dt float64) { // dt - delta time (time passed since last update) in seconds
+func (c *Controller) updateExplosion(explosion *model.LiveExplosion, dt float64) { // dt - delta time (time passed since last update) in seconds
 	dr := ExplosionRadiusChangePerSecond * dt
 	explosion.Changed = true
 	if explosion.OuterRadius < ExplosionMaxRadius {
