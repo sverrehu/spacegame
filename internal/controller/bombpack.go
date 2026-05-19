@@ -6,18 +6,18 @@ import (
 
 const BombPackRadius = 4
 
-func CreateBombPack(ship *model.LiveShip) {
+func (c *Controller) CreateBombPack(ship *model.LiveShip) {
 	if ship.BombsLeft == 0 {
 		return
 	}
 	bombPack := model.NewLiveBombPack(ship.Position, ship.Color, ship.BombsLeft)
-	liveWorld.BombPacks[bombPack.Id] = &bombPack
+	c.liveWorld.BombPacks[bombPack.Id] = &bombPack
 }
 
-func updateBombPack(bombPack *model.LiveBombPack, dt float64) { // dt - delta time (time passed since last update) in seconds
+func (c *Controller) updateBombPack(bombPack *model.LiveBombPack, dt float64) { // dt - delta time (time passed since last update) in seconds
 }
 
-func removeBombPack(bombPack *model.LiveBombPack) {
+func (c *Controller) removeBombPack(bombPack *model.LiveBombPack) {
 	bombPack.BaseObject.Delete = true
 	bombPack.BaseObject.Changed = true
 }
