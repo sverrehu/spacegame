@@ -3,7 +3,7 @@ module github.com/sverrehu/spacegame
 go 1.26.1
 
 require (
-	github.com/gogpu/gg v0.47.2
+	github.com/gogpu/gg v0.47.3
 	github.com/gogpu/gogpu v0.37.9
 	github.com/gogpu/gpucontext v0.19.0
 	github.com/sverrehu/goutils v1.0.3
