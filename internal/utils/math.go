@@ -98,6 +98,10 @@ func LineLength(p0, p1 *Point) float64 {
 	return VectorLengthXY(p1.X-p0.X, p1.Y-p0.Y)
 }
 
+func LineLengthXY(x0, y0, x1, y1 float64) float64 {
+	return VectorLengthXY(x1-x0, y1-y0)
+}
+
 func GetAngle(fromX, fromY, toX, toY float64) float64 {
 	// this is the _visual_ angle in radians: 0 is right, PI/2 is up,
 	// PI is left, and 3PI/2 is down.
