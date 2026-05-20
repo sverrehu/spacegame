@@ -97,3 +97,7 @@ func (o *BaseObject) FromAnyUpdate(u AnyObjectUpdate) {
 func (o *BaseObject) IsChanged() bool {
 	return o.New || o.Changed
 }
+
+func (o *BaseObject) AngleTo(destination *BaseObject) float64 {
+	return utils.GetAngle(o.Position.X, o.Position.Y, destination.Position.X, destination.Position.Y)
+}

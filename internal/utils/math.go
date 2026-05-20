@@ -100,7 +100,7 @@ func LineLength(p0, p1 *Point) float64 {
 
 func GetAngle(fromX, fromY, toX, toY float64) float64 {
 	// this is the _visual_ angle in radians: 0 is right, PI/2 is up,
-	// * PI is left, and 3PI/2 is down.
+	// PI is left, and 3PI/2 is down.
 	dx := toX - fromX
 	dy := fromY - toY /* mathematical y direction: positive up. */
 	var ret float64

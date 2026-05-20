@@ -66,7 +66,7 @@ func (c *Controller) updateBombDirection(bomb *model.LiveBomb, dt float64) {
 		return
 	}
 	// get direction to the enemy.
-	wantedDirection := utils.GetAngle(bomb.Position.X, bomb.Position.Y, enemyShip.Position.X, enemyShip.Position.Y)
+	wantedDirection := bomb.AngleTo(&enemyShip.BaseObject)
 	/* determine turn */
 	dir := bomb.Direction
 	ddir := wantedDirection - bomb.Direction
