@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.0.4](https://github.com/sverrehu/spacegame/compare/v0.0.3...v0.0.4) (2026-05-20)
+
+
+### Bug Fixes
+
+* update gogpu dependencies ([5bd96ef](https://github.com/sverrehu/spacegame/commit/5bd96ef923338a815233216d02ddeb190e97e605))
+
 ## [0.0.3](https://github.com/sverrehu/spacegame/compare/v0.0.2...v0.0.3) (2026-05-18)
 
 
