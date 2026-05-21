@@ -101,3 +101,7 @@ func (o *BaseObject) IsChanged() bool {
 func (o *BaseObject) AngleTo(destination *BaseObject) float64 {
 	return utils.GetAngle(o.Position.X, o.Position.Y, destination.Position.X, destination.Position.Y)
 }
+
+func (o *BaseObject) DistanceTo(destination *BaseObject) float64 {
+	return utils.LineLength(&o.Position, &destination.Position)
+}
