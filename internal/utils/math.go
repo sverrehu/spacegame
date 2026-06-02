@@ -117,10 +117,10 @@ func GetAngle(fromX, fromY, toX, toY float64) float64 {
 	} else {
 		ret = math.Atan(dy / dx)
 	}
-	/* find correct quadrant, and "normalize". atan returns the
+	/* find the correct quadrant and "normalize". atan returns the
 	 * interval -PI/2 to PI/2, we want 0 to 2PI. */
 	if ret >= 0.0 {
-		if dy < 0 && dx < 0 {
+		if dy <= 0 && dx < 0 {
 			ret += math.Pi
 		}
 	} else {
