@@ -2,13 +2,12 @@ package main
 
 import (
 	"fmt"
-	"net"
 	"os"
-	"strconv"
 
 	"github.com/sverrehu/goutils/getopt"
 	"github.com/sverrehu/spacegame/internal/client"
 	"github.com/sverrehu/spacegame/internal/server"
+	"github.com/sverrehu/spacegame/internal/utils"
 )
 
 func main() {
@@ -30,14 +29,7 @@ func main() {
 		server.StartServer(serverPort)
 	}
 	if connectString != "" {
-		host, portString, err := net.SplitHostPort(connectString)
-		if err != nil {
-			panic(err)
-		}
-		port, err := strconv.Atoi(portString)
-		if err != nil {
-			panic(err)
-		}
+		host, port := utils.HostAndPort(connectString)
 		if name == "" {
 			fmt.Println("You must specify a name")
 			os.Exit(1)
