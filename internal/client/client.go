@@ -55,10 +55,14 @@ func (c *Client) Start() {
 	c.waitForWorldReady()
 }
 
-func (c *Client) StartWithUI() {
-	c.Start()
+func (c *Client) StartUI() {
 	ui := NewUI()
 	ui.startUI(c)
+}
+
+func (c *Client) StartWithUI() {
+	c.Start()
+	c.StartUI()
 }
 
 func (c *Client) connect(host string, port int) net.Conn {
