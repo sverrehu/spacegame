@@ -122,7 +122,7 @@ func (o *LiveShip) SubDamage(n float64) {
 	o.Changed = true
 }
 
-func (o *Ship) GetWorldRelativeShape() []utils.Point {
+func (o *Ship) WorldRelativeShape() []utils.Point {
 	rotated := utils.Rotate(ShipShape, o.Direction)
 	return utils.Tranlate(rotated, &o.Position)
 }

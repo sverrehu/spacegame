@@ -50,8 +50,8 @@ func (ui *UI) startUI(cl ClientInterface) {
 		WithSize(width, height).
 		WithContinuousRender(false))
 
-	ui.client.GetInfoMessages().Clear()
-	ui.client.GetChatMessages().Clear()
+	ui.client.InfoMessages().Clear()
+	ui.client.ChatMessages().Clear()
 
 	var canvas *ggcanvas.Canvas
 	var animToken *gogpu.AnimationToken
@@ -141,7 +141,7 @@ func (ui *UI) onKeyPress() func(key gpucontext.Key, mods gpucontext.Modifiers) {
 			ui.client.FireBomb()
 			ui.lastBomb = true
 		} else if key == gpucontext.KeyR {
-			if !ui.client.GetMyShip().IsAlive {
+			if !ui.client.MyShip().IsAlive {
 				ui.client.Resurrect()
 			}
 		} else if key == gpucontext.KeyF1 {
@@ -175,8 +175,8 @@ func (ui *UI) onKeyRelease() func(key gpucontext.Key, mods gpucontext.Modifiers)
 }
 
 func (ui *UI) renderFrame(cc *gg.Context) {
-	world := ui.client.GetWorld()
-	myShip := ui.client.GetMyShip()
+	world := ui.client.World()
+	myShip := ui.client.MyShip()
 	cc.ClearWithColor(gg.RGBA2(0, 0, 0, 1))
 	// world relative objects
 	ui.drawBounds(cc, world, myShip)
@@ -227,7 +227,7 @@ func (ui *UI) drawShip(cc *gg.Context, ship *model.Ship, myShip *model.Ship) {
 	if !ship.IsAlive {
 		return
 	}
-	worldShape := ship.GetWorldRelativeShape()
+	worldShape := ship.WorldRelativeShape()
 	cc.SetRGB(ship.Color.R, ship.Color.G, ship.Color.B)
 	cc.MoveTo(ui.rX(worldShape[0].X, myShip), ui.rY(worldShape[0].Y, myShip))
 	for _, point := range worldShape[1:] {
@@ -290,8 +290,8 @@ func (ui *UI) drawExplosion(cc *gg.Context, explosion *model.Explosion, myShip *
 }
 
 func (ui *UI) drawAllMessages(cc *gg.Context) {
-	ui.drawMessages(cc, ui.client.GetInfoMessages(), 1.0, 0.78, 0.0, 0)
-	ui.drawMessages(cc, ui.client.GetChatMessages(), 1.0, 1.0, 0.0, height/2)
+	ui.drawMessages(cc, ui.client.InfoMessages(), 1.0, 0.78, 0.0, 0)
+	ui.drawMessages(cc, ui.client.ChatMessages(), 1.0, 1.0, 0.0, height/2)
 }
 
 func (ui *UI) drawMessages(cc *gg.Context, messages *GameMessages, r, g, b float64, startY float64) {

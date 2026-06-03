@@ -11,8 +11,10 @@ import (
 )
 
 type ClientInterface interface {
-	GetWorld() *model.World
-	GetMyShip() *model.Ship
+	World() *model.World
+	MyShip() *model.Ship
+	InfoMessages() *GameMessages
+	ChatMessages() *GameMessages
 	TurnLeft()
 	TurnRight()
 	TurnNone()
@@ -22,8 +24,6 @@ type ClientInterface interface {
 	FirePhaser()
 	FireBomb()
 	Resurrect()
-	GetInfoMessages() *GameMessages
-	GetChatMessages() *GameMessages
 }
 
 type Client struct {
@@ -163,11 +163,11 @@ func (c *Client) addChatMessage(text string) {
 	c.chatMessages.Add(text, 6*time.Second)
 }
 
-func (c *Client) GetWorld() *model.World {
+func (c *Client) World() *model.World {
 	return &c.world
 }
 
-func (c *Client) GetMyShip() *model.Ship {
+func (c *Client) MyShip() *model.Ship {
 	return c.world.Ships[c.myShipId]
 }
 
@@ -207,10 +207,10 @@ func (c *Client) Resurrect() {
 	c.server.sendResurrectMessage()
 }
 
-func (c *Client) GetInfoMessages() *GameMessages {
+func (c *Client) InfoMessages() *GameMessages {
 	return &c.infoMessages
 }
 
-func (c *Client) GetChatMessages() *GameMessages {
+func (c *Client) ChatMessages() *GameMessages {
 	return &c.chatMessages
 }

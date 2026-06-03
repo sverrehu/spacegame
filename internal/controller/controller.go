@@ -131,7 +131,7 @@ func (c *Controller) findCollidingShip(exceptShipId int32, oldPos, newPos *utils
 		if !ship.IsAlive {
 			continue
 		}
-		if utils.ShapeAndLineIntersect(ship.GetWorldRelativeShape(), oldPos, newPos) {
+		if utils.ShapeAndLineIntersect(ship.WorldRelativeShape(), oldPos, newPos) {
 			return ship
 		}
 	}

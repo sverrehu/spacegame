@@ -149,7 +149,7 @@ func (c *Controller) checkCollisionWithBombPacks(ship *model.LiveShip) {
 }
 
 func (c *Controller) isBombPackCollision(ship *model.LiveShip, bombPack *model.LiveBombPack) bool {
-	shape := ship.GetWorldRelativeShape()
+	shape := ship.WorldRelativeShape()
 	p1 := new(utils.NewPoint(bombPack.Position.X-BombPackRadius, bombPack.Position.Y-BombPackRadius))
 	p2 := new(utils.NewPoint(bombPack.Position.X+BombPackRadius, bombPack.Position.Y+BombPackRadius))
 	p3 := new(utils.NewPoint(bombPack.Position.X-BombPackRadius, bombPack.Position.Y+BombPackRadius))
