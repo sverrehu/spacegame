@@ -53,6 +53,10 @@ func (c *Client) Start() {
 	c.server = NewServerAdapter(c.connect(c.host, c.port), c)
 	c.server.sendEnterMessage(c.name)
 	c.waitForWorldReady()
+}
+
+func (c *Client) StartWithUI() {
+	c.Start()
 	ui := NewUI()
 	ui.startUI(c)
 }

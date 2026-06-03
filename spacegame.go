@@ -35,7 +35,7 @@ func main() {
 			os.Exit(1)
 		}
 		client := client.NewTcpClient(host, port, name)
-		client.Start()
+		client.StartWithUI()
 	}
 	if serverPort >= 0 {
 		server.WaitForServer()
