@@ -61,7 +61,7 @@ func (c *Controller) updateBombFlip(bomb *model.LiveBomb) {
 
 func (c *Controller) updateBombDirection(bomb *model.LiveBomb, dt float64) {
 	owner := c.liveWorld.Ships[bomb.ShipId]
-	enemyShip := c.liveWorld.GetClosestShip(owner, &bomb.Position)
+	enemyShip := c.liveWorld.ClosestShip(owner, &bomb.Position)
 	if enemyShip == nil {
 		return
 	}

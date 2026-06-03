@@ -196,7 +196,7 @@ func (c *Controller) killShip(ship *model.LiveShip) {
 }
 
 func (c *Controller) findGoodLocation(s *model.LiveShip) utils.Point {
-	collidables := c.liveWorld.GetCollidables(s)
+	collidables := c.liveWorld.Collidables(s)
 	if len(collidables) == 0 {
 		return utils.NewPoint(c.liveWorld.Width/2, c.liveWorld.Height/2)
 	}

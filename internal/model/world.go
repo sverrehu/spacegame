@@ -130,7 +130,7 @@ func (w *LiveWorld) PrepareNextRound() {
 	}
 }
 
-func (w *LiveWorld) GetCollidables(except *LiveShip) []*BaseObject {
+func (w *LiveWorld) Collidables(except *LiveShip) []*BaseObject {
 	objs := make([]*BaseObject, 0, 100)
 	for _, obj := range w.Ships {
 		if except == nil || obj.Id != except.Id {
@@ -149,7 +149,7 @@ func (w *LiveWorld) GetCollidables(except *LiveShip) []*BaseObject {
 	return objs
 }
 
-func (w *LiveWorld) GetClosestShip(except *LiveShip, pos *utils.Point) *LiveShip {
+func (w *LiveWorld) ClosestShip(except *LiveShip, pos *utils.Point) *LiveShip {
 	shortestDistance := math.MaxFloat64
 	var closest *LiveShip = nil
 	for _, ship := range w.Ships {
