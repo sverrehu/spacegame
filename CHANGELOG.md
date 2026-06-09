@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.0.5](https://github.com/sverrehu/spacegame/compare/v0.0.4...v0.0.5) (2026-06-09)
+
+
+### Bug Fixes
+
+* update dependencies ([f37292b](https://github.com/sverrehu/spacegame/commit/f37292b9fd532a5fe6eb6500deedc3410231ced5))
+
 ## [0.0.4](https://github.com/sverrehu/spacegame/compare/v0.0.3...v0.0.4) (2026-05-20)
 
 
