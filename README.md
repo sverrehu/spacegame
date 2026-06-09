@@ -17,7 +17,7 @@ In the lower right corner is a radar display showing the entire world.
 A gray rectangle marks the area of the world you currently have in your window.
 Enemy ships appear in the radar as green dots, while weapons left by dying enemies are shown as red dots.
 
-You ship's status is shown in the lower left corner.
+Your ship's status is shown in the lower left corner.
 A ship damage meter shows how far you are from being blown completely away.
 If this meter goes high, you should bail out of any battle you attend to, and spend some time on you own.
 The ship will then slowly repair itself.
