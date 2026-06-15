@@ -1,6 +1,8 @@
 package model
 
 import (
+	"math"
+
 	"github.com/sverrehu/spacegame/internal/utils"
 )
 
@@ -100,6 +102,10 @@ func (o *BaseObject) IsChanged() bool {
 
 func (o *BaseObject) AngleTo(destination *BaseObject) float64 {
 	return utils.GetAngle(o.Position.X, o.Position.Y, destination.Position.X, destination.Position.Y)
+}
+
+func (o *BaseObject) AbsAngleTo(destination *BaseObject) float64 {
+	return math.Abs(o.AngleTo(destination))
 }
 
 func (o *BaseObject) DistanceTo(destination *BaseObject) float64 {
