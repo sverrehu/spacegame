@@ -4,7 +4,7 @@ go 1.26.1
 
 require (
 	github.com/gogpu/gg v0.48.8
-	github.com/gogpu/gogpu v0.41.7
+	github.com/gogpu/gogpu v0.41.12
 	github.com/gogpu/gpucontext v0.19.0
 	github.com/sverrehu/goutils v1.0.3
 )
@@ -15,7 +15,7 @@ require (
 	github.com/go-webgpu/webgpu v0.5.2 // indirect
 	github.com/gogpu/gputypes v0.5.0 // indirect
 	github.com/gogpu/naga v0.17.14 // indirect
-	github.com/gogpu/wgpu v0.29.12 // indirect
+	github.com/gogpu/wgpu v0.29.14 // indirect
 	golang.org/x/image v0.42.0 // indirect
 	golang.org/x/sys v0.46.0 // indirect
 	golang.org/x/text v0.38.0 // indirect
