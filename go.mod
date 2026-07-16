@@ -5,7 +5,7 @@ go 1.26.1
 require (
 	github.com/gogpu/gg v0.50.3
 	github.com/gogpu/gogpu v0.44.1
-	github.com/gogpu/gpucontext v0.21.0
+	github.com/gogpu/gpucontext v0.21.1
 	github.com/sverrehu/goutils v1.0.3
 )
 
