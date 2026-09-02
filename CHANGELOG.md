@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.0.6](https://github.com/sverrehu/spacegame/compare/v0.0.5...v0.0.6) (2026-09-02)
+
+
+### Bug Fixes
+
+* **deps:** update module github.com/sverrehu/goutils to v1.0.4 ([#30](https://github.com/sverrehu/spacegame/issues/30)) ([6e88782](https://github.com/sverrehu/spacegame/commit/6e8878271f8e11b56386ac9305611850c7cbc26e))
+
 ## [0.0.5](https://github.com/sverrehu/spacegame/compare/v0.0.4...v0.0.5) (2026-06-09)
 
 
