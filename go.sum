@@ -18,10 +18,14 @@ github.com/gogpu/gpucontext v0.21.1 h1:/X96uCLG8QtQVfGPYPz8ycnfsAg0iTyzqzEadWBUu
 github.com/gogpu/gpucontext v0.21.1/go.mod h1:OrT137boh5yPhqBEhF4UQKIOu1Jq74SLQzYa/m6JbNo=
 github.com/gogpu/gpucontext v0.31.3 h1:SMnYOQgr+s5issi1R/Oezbo8lV5Lb6HWUZ4HujFgrZA=
 github.com/gogpu/gpucontext v0.31.3/go.mod h1:pnyWQA9lpvESPAKoqzKlsg3pDMFSkxdjonu4gWvnNtA=
+github.com/gogpu/gpucontext v0.32.1 h1:ZSmpKWLULm6UOl3ICrBMVl5yhxV+vns+93dJrPlRuSA=
+github.com/gogpu/gpucontext v0.32.1/go.mod h1:oFqogGOr/A3enrmyHBMeCLHrixtnAcBEVsyaCHNGAow=
 github.com/gogpu/gputypes v0.5.1 h1:X38OPcP6umQqqubzzJYL6Nm1tXHSNQj6TRSAoxdAJmg=
 github.com/gogpu/gputypes v0.5.1/go.mod h1:cnXrDMwTpWTvJLW1Vreop3PcT6a2YP/i3s91rPaOavw=
 github.com/gogpu/gputypes v0.8.2 h1:XGn8Kib6fXOREwKLzYyfEqaXTBCi9Zs2oAWj1+yW+ic=
 github.com/gogpu/gputypes v0.8.2/go.mod h1:cnXrDMwTpWTvJLW1Vreop3PcT6a2YP/i3s91rPaOavw=
+github.com/gogpu/gputypes v0.9.2 h1:BAYj+U3bfPKIhQEBjbLkaHM8I996fmDp3UAV2MdAH5w=
+github.com/gogpu/gputypes v0.9.2/go.mod h1:cnXrDMwTpWTvJLW1Vreop3PcT6a2YP/i3s91rPaOavw=
 github.com/gogpu/naga v0.17.15 h1:uyy4bc8wYlvDaYOpmCBYrJ+d+e7ZqP2BN36csmRVs7o=
 github.com/gogpu/naga v0.17.15/go.mod h1:15sQaHKkbqXcwTN+hHYGLsA0WBBnkmYzne/eF5p5WEg=
 github.com/gogpu/naga v0.21.5 h1:x001iV3GQdDvNJM+J/aQB5DFYbGSA/PWUq7s27C+5XQ=
